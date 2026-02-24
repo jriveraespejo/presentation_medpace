@@ -25,5 +25,5 @@ format:
     csl: diabetologia.csl
     css: styles.css
     logo: figures/medpace_logo.png
-    footer: 'Medpace Biostatistics Interview | Jose Manuel Rivera Espejo'
+    footer: 'Biostatistics presentation | Jose Manuel Rivera Espejo'
     #embed-resources: true

@@ -430,7 +430,7 @@ Jose Manuel Rivera Espejo
 </div>
 </div>
 
-  <p class="date">2026-02-24</p>
+  <p class="date">24 February 2026</p>
 </section>
 <section id="the-contents" class="slide level2" style="font-size:64%;">
 <h2>The contents</h2>
@@ -442,7 +442,7 @@ Jose Manuel Rivera Espejo
 <li>Software implementation</li>
 <li>Technical depth</li>
 <li>Validation and regulatory aligment</li>
-<li>Results for the motivating example</li>
+<li>Results</li>
 <li>CDISC standards and traceability</li>
 <li>Business value for Medpace</li>
 </ol>
@@ -452,10 +452,20 @@ Jose Manuel Rivera Espejo
 <p>Consistent with the <strong>Estimands framework</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, a liver transplant study modified from Collett <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span> can be defined as:</p>
 <div>
 <ol type="1">
-<li class="fragment"><p><strong>Population:</strong> <span class="math inline">\(N=1761\)</span> adult elective transplant recipients from a deceased donor (<span class="math inline">\(2000-2010\)</span>), followed up until <span class="math inline">\(2012\)</span>, with baseline attributes for age and primary liver disease.</p></li>
+<li class="fragment"><strong>Population:</strong> adult elective transplant recipients from a deceased donor.</li>
+</ol>
+<div>
+<div style="font-size:80%;">
+<ul>
+<li class="fragment">Sample size: <span class="math inline">\(N=1761\)</span>.</li>
+<li class="fragment">Follow up time: <span class="math inline">\(2000-2012\)</span>.</li>
+<li class="fragment">Baseline attributes: age and primary liver disease.</li>
+</ul>
+</div>
+</div>
+<ol start="2" type="1">
 <li class="fragment"><p><strong>Treatment:</strong> Two types of liver preservation solutions (Solution A vs.&nbsp;Solution B).</p></li>
-<li class="fragment"><p><strong>Variable/Endpoint:</strong> Time to graft failure from <u>acute/chronic organ rejection (OR)</u>.</p></li>
-<li class="fragment"><p><strong>Summary measure:</strong> The difference in the incidence of graft failure from OR between preservation solutions at time <span class="math inline">\(t\)</span>.</p></li>
+<li class="fragment"><p><strong>Variable/Endpoint:</strong> Time to graft failure due to acute/chronic organ rejection (OR).</p></li>
 <li class="fragment"><p><strong>Intercurrent events</strong> include graft failure from:</p></li>
 </ol>
 <div>
@@ -467,6 +477,9 @@ Jose Manuel Rivera Espejo
 </ul>
 </div>
 </div>
+<ol start="5" type="1">
+<li class="fragment"><strong>Summary measure:</strong> The difference in the incidence of graft failure from OR between preservation solutions at time <span class="math inline">\(t\)</span>.</li>
+</ol>
 </div>
 <aside class="notes">
 <p><strong>primary liver diseases</strong> include - primary biliary cirrhosis (PBC) - primary sclerosing cholangitis (PSC) and - alcoholic liver disease (ALD)</p>
@@ -488,18 +501,21 @@ Jose Manuel Rivera Espejo
 <h2>2. Clinical conflict</h2>
 <div>
 <ul>
-<li class="fragment"><p><strong>Reality:</strong> <u>competing risks</u> preclude the occurrence of the primary endpoint <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>, effectively affecting its existence or interpretation <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>.</p></li>
-<li class="fragment"><p><strong>Naive estimator:</strong> can we simply treat them as <u>censored</u>? Approach taken by the <u>standard Kaplan-Meier (1-KM) model</u>.</p></li>
-<li class="fragment"><p><strong>Estimation problem:</strong> “Censoring” competing risks causes the 1-KM model to <u>overestimate</u> the cumulative incidence of the event of interest <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p></li>
-<li class="fragment"><p><strong>Estimand definition:</strong> “The 1-KM estimate is the probability of (failing) beyond time <span class="math inline">\(t\)</span>, if cause <span class="math inline">\(j\)</span> is the only cause of (failure), that is if all other risks were removed.” <span class="citation" data-cites="Collett_2023 Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">2</a>, <a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
+<li class="fragment"><p><strong>Reality:</strong></p>
+<p>Competing risks preclude the occurrence of the primary endpoint <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>, effectively affecting its existence or interpretation <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>.</p></li>
+<li class="fragment"><p><strong>Naive estimator:</strong></p>
+<p>can we simply treat them as censored? Approach taken by the standard Kaplan-Meier (1-KM) model.</p></li>
+<li class="fragment"><p><strong>Estimation problem:</strong></p>
+<p>“Censoring” competing risks causes the 1-KM model to overestimate the cumulative incidence of the event of interest <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p></li>
+<li class="fragment"><p><strong>Estimand definition:</strong></p>
+<p>“The 1-KM estimate is the probability of (failing) beyond time <span class="math inline">\(t\)</span>, if cause <span class="math inline">\(j\)</span> is the only cause of (failure), that is if all other risks were removed.” <span class="citation" data-cites="Collett_2023 Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">2</a>, <a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
+<li class="fragment"><p><strong>Question:</strong></p>
+<p>How to ensure an unbiased, efficient estimate of the summary measure?</p></li>
 </ul>
 </div>
-<p><span class="fragment"><strong>Question:</strong> How to ensure an unbiased, efficient estimate of the summary measure?</span></p>
 <aside class="notes">
 <ul>
 <li><p><strong>Reality:</strong> Different graft failures <u>compete</u> to be the observed time-to-event endpoint.</p></li>
-<li><p><strong>Naive estimator:</strong> Since competing risks preclude the primary endpoint, can we simply treat them as <u>censored</u> at the time of occurrence? This is the approach taken by the <u>standard Kaplan-Meier (1-KM) model</u>, which analyzes one failure type at a time.</p></li>
-<li><p><strong>Estimation problem:</strong> “Censoring” competing risks causes the 1-KM model to <u>overestimate</u> the cumulative incidence of the event of interest <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p></li>
 <li><p><strong>Estimand definition:</strong> “the analysis is effectively an attempt to simulate a population in which (failure) from other causes is somehow either abolished or rendered independent of the risk factors for (the event of interest). The resulting effect estimate is hard to interpret and may not correspond to a meaningful estimand” <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
 </ul>
 <style type="text/css">
@@ -519,10 +535,14 @@ Jose Manuel Rivera Espejo
 <p>Consistent with the <strong>strategies for addressing intercurrent events</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, an alternative to the <strong>hypothetical strategy</strong> (targeted by 1-KM estimator) is to:</p>
 <div>
 <ul>
-<li class="fragment"><p><strong>Create a single composite event</strong>, e.g., any cause of graft failure is considered an event. <u>This changes the question/estimand</u> <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
-<li class="fragment"><p><strong>Restricting inference to the principal stratum</strong>, e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment. <u>This needs a “challenging” counterfactual</u> <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
-<li class="fragment"><p><strong>Apply the treatment policy strategy</strong>. But in this case it may lead to <u>clinically nonsensical</u> scenarios, e.g., consider the “re-transplant” problem.</p></li>
-<li class="fragment"><p><strong>Follow a while-on-treatment strategy</strong>, e.g., consider the “re-transplant” problem again. <span class="fragment"><u>This is what the Fine-Gray <span class="citation" data-cites="Fine_et_al_1999">[F&amp;G, <a href="#/references" role="doc-biblioref" onclick="">4</a>]</span> and Jeong-Fine <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[J&amp;F, <a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> estimators attempt to model.</u></span></p></li>
+<li class="fragment"><p><strong>Create a single composite event</strong>,</p>
+<p>e.g., any cause of graft failure is considered an event. This changes the question/estimand <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
+<li class="fragment"><p><strong>Restricting inference to the principal stratum</strong>,</p>
+<p>e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment. This needs a “challenging” counterfactual <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
+<li class="fragment"><p><strong>Apply the treatment policy strategy</strong>.</p>
+<p>In this case it may lead to clinically nonsensical scenarios, e.g., consider the “re-transplant” problem.</p></li>
+<li class="fragment"><p><strong>Follow a while-on-treatment strategy</strong>,</p>
+<p>e.g., consider the “re-transplant” problem again. <span class="fragment">This is what the Fine-Gray <span class="citation" data-cites="Fine_et_al_1999">[F&amp;G, <a href="#/references" role="doc-biblioref" onclick="">4</a>]</span> and Jeong-Fine <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[J&amp;F, <a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> estimators attempt to model.</span></p></li>
 </ul>
 </div>
 <aside class="notes">
@@ -651,7 +671,7 @@ F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
 <div style="font-size:80%;">
 <ul>
 <li class="fragment">Probabilistic Programming Language (PPL) knowledge</li>
-<li class="fragment">Justification for priors (see topic <span class="math inline">\(7\)</span>)</li>
+<li class="fragment">Justification for priors (see Slide <span class="math inline">\(7\)</span>)</li>
 </ul>
 </div>
 </div>
@@ -902,19 +922,31 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
           display:block!important;
       }</style></aside>
 </section>
-<section id="results-for-the-motivating-example" class="slide level2" style="font-size:64%;">
-<h2>8. Results for the motivating example</h2>
+<section id="results-data" class="slide level2" style="font-size:64%;">
+<h2>8. Results: data</h2>
+<p>build a demographic table with summarize_vars(), for age and disease</p>
+</section>
+<section id="results-frequentist-fg-model" class="slide level2" style="font-size:64%;">
+<h2>8. Results: frequentist F&amp;G model</h2>
+</section>
+<section id="results-bayesian-fg-model" class="slide level2" style="font-size:64%;">
+<h2>8. Results: Bayesian F&amp;G model</h2>
+</section>
+<section id="results-bayesian-jf-model" class="slide level2" style="font-size:64%;">
+<h2>8. Results: Bayesian J&amp;F model</h2>
 </section>
 <section id="cdisc-standards-and-traceability" class="slide level2" style="font-size:64%;">
 <h2>9. CDISC Standards and traceability</h2>
 <p>This example used a pre-processed dataset. However, the standard clinical trial workflow would involve a rigorous data pipeline to ensure traceability and regulatory compliance.</p>
 <div class="fragment">
-<p>Some steps of this “missing” workflow include:</p>
+<p>Some steps “missing” for the example workflow include:</p>
 <div>
 <ul>
 <li class="fragment">Mapping raw source data to formal SDTM domains,</li>
 <li class="fragment">Cleaning and validating SDTM inputs to ensure data integrity,</li>
+<li class="fragment">Deriving the ADaM ADSL dataset,</li>
 <li class="fragment">Deriving the ADaM ADTTE dataset,</li>
+<li class="fragment">Producing Tables, Listings, and Graphs/Figures (TLGs/TLFs)</li>
 <li class="fragment">and more</li>
 </ul>
 </div>
@@ -975,8 +1007,8 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
           display:block!important;
       }</style></aside>
 </section>
-<section id="questions" class="slide level2" style="font-size:64%;">
-<h2>Questions?</h2>
+<section id="thank-you" class="slide level2 center-xy">
+<h2>Thank you</h2>
 <aside class="notes">
 <p>To conclude I can say that,</p>
 <ol type="1">
@@ -995,6 +1027,9 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
+</section>
+<section id="questions" class="slide level2 center-xy">
+<h2>Questions?</h2>
 </section>
 <section id="references" class="slide level2 smaller scrollable" style="font-size:80%;">
 <h2>References</h2>
@@ -1049,7 +1084,7 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
 <div class="quarto-auto-generated-content">
 <p><img src="figures/medpace_logo.png" class="slide-logo"></p>
 <div class="footer footer-default">
-<p>Medpace Biostatistics Interview | Jose Manuel Rivera Espejo</p>
+<p>Biostatistics presentation | Jose Manuel Rivera Espejo</p>
 </div>
 </div>
 </section>

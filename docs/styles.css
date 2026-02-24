@@ -13,3 +13,12 @@
 .reveal .slides pre code {
     max-height: 400px;
 }
+
+.center-xy {
+          margin: 0;
+          position: absolute;
+          top: 40%;
+          left: 35%;
+          -ms-transform: translateY(-50%), translateX(-50%);
+          transform: translateY(-50%), translateX(-50%);
+        }

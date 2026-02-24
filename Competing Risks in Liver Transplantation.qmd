@@ -3,6 +3,7 @@ title: "Competing Risks in Liver Transplantation"
 subtitle: "A Bayesian implementation of the Jeong-Fine model"
 author: "Jose Manuel Rivera Espejo"
 date: last-modified
+date-format: "DD MMMM YYYY"
 bibliography: references.bib
 include-in-header:
   - text: |
@@ -22,7 +23,7 @@ include-in-header:
 5. Software implementation 
 6. Technical depth
 7. Validation and regulatory aligment
-8. Results for the motivating example
+8. Results
 9. CDISC standards and traceability
 10. Business value for Medpace
 
@@ -34,15 +35,21 @@ include-in-header:
 Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplant study modified from Collett [@Collett_2023] can be defined as: 
 
 ::: incremental 
-1. **Population:** $N=1761$ adult elective transplant recipients from a deceased donor ($2000-2010$), followed up until $2012$, with baseline attributes for age and primary liver disease.
+1. **Population:** adult elective transplant recipients from a deceased donor.
+
+::: incremental
+::: {style="font-size:80%;"}
+- Sample size: $N=1761$.
+- Follow up time: $2000-2012$.
+- Baseline attributes: age and primary liver disease.
+:::
+:::
 
 2. **Treatment:** Two types of liver preservation solutions (Solution A vs. Solution B).
 
-3. **Variable/Endpoint:** Time to graft failure from [acute/chronic organ rejection (OR)]{.underline}.
+3. **Variable/Endpoint:** Time to graft failure due to acute/chronic organ rejection (OR).
 
-4. **Summary measure:** The difference in the incidence of graft failure from OR between preservation solutions at time $t$.
-
-5. **Intercurrent events** include graft failure from: 
+4. **Intercurrent events** include graft failure from: 
 
 ::: incremental
 ::: {style="font-size:80%;"}
@@ -52,8 +59,9 @@ Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplan
 :::
 :::
 
-:::
+5. **Summary measure:** The difference in the incidence of graft failure from OR between preservation solutions at time $t$.
 
+:::
 
 ::: {.notes}
 **primary liver diseases** include
@@ -72,24 +80,32 @@ Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplan
 ## 2. Clinical conflict {style="font-size:64%;"}
 
 ::: incremental 
-* **Reality:** [competing risks]{.underline} preclude the occurrence of the primary endpoint [@Collett_2023], effectively affecting its existence or interpretation [@ICH_E9_R1_2019].
+* **Reality:** 
+  
+    Competing risks preclude the occurrence of the primary endpoint [@Collett_2023], effectively affecting its existence or interpretation [@ICH_E9_R1_2019].
 
-* **Naive estimator:** can we simply treat them as [censored]{.underline}? Approach taken by the [standard Kaplan-Meier (1-KM) model]{.underline}.
+* **Naive estimator:** 
 
-* **Estimation problem:** "Censoring" competing risks causes the 1-KM model to [overestimate]{.underline} the cumulative incidence of the event of interest [@Collett_2023].
+    can we simply treat them as censored? Approach taken by the standard Kaplan-Meier (1-KM) model.
 
-* **Estimand definition:** "The 1-KM estimate is the probability of (failing) beyond time $t$, if cause $j$ is the only cause of (failure), that is if all other risks were removed." [@Collett_2023; @Hernan_et_al_2025]
+* **Estimation problem:** 
+
+    "Censoring" competing risks causes the 1-KM model to overestimate the cumulative incidence of the event of interest [@Collett_2023].
+
+* **Estimand definition:** 
+
+    "The 1-KM estimate is the probability of (failing) beyond time $t$, if cause $j$ is the only cause of (failure), that is if all other risks were removed." [@Collett_2023; @Hernan_et_al_2025]
+
+* **Question:** 
+
+    How to ensure an unbiased, efficient estimate of the summary measure?
 :::
 
-[**Question:** How to ensure an unbiased, efficient estimate of the summary measure?]{.fragment}
+
 
 ::: {.notes}
 
 * **Reality:** Different graft failures [compete]{.underline} to be the observed time-to-event endpoint.
-
-* **Naive estimator:** Since competing risks preclude the primary endpoint, can we simply treat them as [censored]{.underline} at the time of occurrence? This is the approach taken by the [standard Kaplan-Meier (1-KM) model]{.underline}, which analyzes one failure type at a time.
-
-* **Estimation problem:** "Censoring" competing risks causes the 1-KM model to [overestimate]{.underline} the cumulative incidence of the event of interest [@Collett_2023].
 
 * **Estimand definition:** "the analysis is effectively an attempt to simulate a population in which (failure) from other causes is somehow either abolished or rendered independent of the risk factors for (the event of interest). The resulting effect estimate is hard to interpret and may not correspond to a meaningful estimand" [@Hernan_et_al_2025]
 :::
@@ -102,13 +118,21 @@ Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplan
 Consistent with the **strategies for addressing intercurrent events** [@ICH_E9_R1_2019], an alternative to the **hypothetical strategy** (targeted by 1-KM estimator) is to:
 
 ::: incremental 
-* **Create a single composite event**, e.g., any cause of graft failure is considered an event. [This changes the question/estimand]{.underline} [@Hernan_et_al_2025].
+* **Create a single composite event**, 
 
-* **Restricting inference to the principal stratum**, e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment. [This needs a "challenging" counterfactual]{.underline} [@Hernan_et_al_2025].
+    e.g., any cause of graft failure is considered an event. This changes the question/estimand [@Hernan_et_al_2025].
 
-* **Apply the treatment policy strategy**. But in this case it may lead to [clinically nonsensical]{.underline} scenarios, e.g., consider the "re-transplant" problem.
+* **Restricting inference to the principal stratum**, 
 
-* **Follow a while-on-treatment strategy**, e.g., consider the "re-transplant" problem again. [This is what the Fine-Gray [F&G, @Fine_et_al_1999] and Jeong-Fine [J&F, @Jeong_et_al_2006; @Jeong_et_al_2007] estimators attempt to model.]{.fragment .underline}
+    e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment. This needs a "challenging" counterfactual [@Hernan_et_al_2025].
+
+* **Apply the treatment policy strategy**. 
+
+    In this case it may lead to clinically nonsensical scenarios, e.g., consider the "re-transplant" problem.
+
+* **Follow a while-on-treatment strategy**, 
+
+    e.g., consider the "re-transplant" problem again. [This is what the Fine-Gray [F&G, @Fine_et_al_1999] and Jeong-Fine [J&F, @Jeong_et_al_2006; @Jeong_et_al_2007] estimators attempt to model.]{.fragment}
 :::
 
 ::: {.notes}
@@ -235,7 +259,7 @@ Drawbacks:
 ::: incremental
 ::: {style="font-size:80%;"}
 - Probabilistic Programming Language (PPL) knowledge
-- Justification for priors (see topic $7$)
+- Justification for priors (see Slide $7$)
 ::: 
 :::
 :::
@@ -469,9 +493,22 @@ Together, they should allow the regulatory authority to assess:
 
 ---
 
-## 8. Results for the motivating example {style="font-size:64%;"}
+## 8. Results: data {style="font-size:64%;"}
+
+build a demographic table with summarize_vars(), for age and disease
+
+---
+
+## 8. Results: frequentist F&G model {style="font-size:64%;"}
 
 
+---
+
+## 8. Results: Bayesian F&G model {style="font-size:64%;"}
+
+---
+
+## 8. Results: Bayesian J&F model {style="font-size:64%;"}
 
 
 ---
@@ -481,12 +518,14 @@ Together, they should allow the regulatory authority to assess:
 This example used a pre-processed dataset. However, the standard clinical trial workflow would involve a rigorous data pipeline to ensure traceability and regulatory compliance. 
 
 ::: {.fragment}
-Some steps of this "missing" workflow include:
+Some steps "missing" for the example workflow include:
 
 ::: incremental
 - Mapping raw source data to formal SDTM domains,
 - Cleaning and validating SDTM inputs to ensure data integrity,
+- Deriving the ADaM ADSL dataset,
 - Deriving the ADaM ADTTE dataset,
+- Producing Tables, Listings, and Graphs/Figures (TLGs/TLFs) 
 - and more
 :::
 :::
@@ -541,7 +580,7 @@ Specifically, the Bayesian J&F model provides:
 
 ---
 
-## Questions? {style="font-size:64%;"}
+## Thank you {.center-xy}
 
 ::: {.notes}
 To conclude I can say that, 
@@ -550,6 +589,11 @@ To conclude I can say that,
 2. I have the CDISC knowledge to make these analyses "submission-ready" from day one.
 3. I am ready to operationalize these workflows starting from **April**.
 :::
+
+
+---
+
+## Questions? {.center-xy}
 
 ---
 
