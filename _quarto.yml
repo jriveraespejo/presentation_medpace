@@ -1,0 +1,29 @@
+project:
+  type: website
+  output-dir: docs
+    
+execute:
+  freeze: auto
+  cache: true
+  # eval: true
+  echo: false
+  # output: true
+  # include: true
+  warning: false
+  error: false
+  message: false
+
+format:
+  revealjs: 
+    theme: simple
+    transition: slide
+    slide-number: true
+    #number-sections: true
+    #number-depth: 2
+    chalkboard: true
+    preview-links: auto
+    csl: diabetologia.csl
+    css: styles.css
+    logo: figures/medpace_logo.png
+    footer: 'Medpace Biostatistics Interview | Jose Manuel Rivera Espejo'
+    #embed-resources: true

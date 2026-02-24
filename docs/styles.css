@@ -1,0 +1,15 @@
+.title {
+  font-size: 60px;
+}
+
+.math.display {
+  font-size: 75% !important;
+}
+
+.math.inline {
+  font-size: 90%  !important;
+}
+
+.reveal .slides pre code {
+    max-height: 400px;
+}

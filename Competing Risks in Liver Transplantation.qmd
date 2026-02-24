@@ -1,0 +1,560 @@
+---
+title: "Competing Risks in Liver Transplantation"
+subtitle: "A Bayesian implementation of the Jeong-Fine model"
+author: "Jose Manuel Rivera Espejo"
+date: last-modified
+bibliography: references.bib
+include-in-header:
+  - text: |
+      <style>
+      #title-slide .title {
+        font-size: 1.5em;
+      }
+      </style>
+---
+
+## The contents {style="font-size:64%;"}
+
+1. Motivating example
+2. Clinical conflict
+3. Handling competing risks
+4. Methodological Split
+5. Software implementation 
+6. Technical depth
+7. Validation and regulatory aligment
+8. Results for the motivating example
+9. CDISC standards and traceability
+10. Business value for Medpace
+
+
+---
+
+## 1. Motivating example {style="font-size:64%;"}
+
+Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplant study modified from Collett [@Collett_2023] can be defined as: 
+
+::: incremental 
+1. **Population:** $N=1761$ adult elective transplant recipients from a deceased donor ($2000-2010$), followed up until $2012$, with baseline attributes for age and primary liver disease.
+
+2. **Treatment:** Two types of liver preservation solutions (Solution A vs. Solution B).
+
+3. **Variable/Endpoint:** Time to graft failure from [acute/chronic organ rejection (OR)]{.underline}.
+
+4. **Summary measure:** The difference in the incidence of graft failure from OR between preservation solutions at time $t$.
+
+5. **Intercurrent events** include graft failure from: 
+
+::: incremental
+::: {style="font-size:80%;"}
+- Hepatic artery thrombosis (HAT),
+- Recurrent disease (RD),
+- Other reasons, including death (Other)
+:::
+:::
+
+:::
+
+
+::: {.notes}
+**primary liver diseases** include
+- primary biliary cirrhosis (PBC) 
+- primary sclerosing cholangitis (PSC) and
+- alcoholic liver disease (ALD)
+
+**summary measure** is purposely not precise enough to make a point.
+
+**additional considerations:** Given the success of liver transplantation, data presents [heavy censoring]{.underline}, with only $15\%$ ($n=260$) of individuals experienced graft failure from any cause, and $1.6\%$ ($n=29$) specifically from OR.
+:::
+
+
+--- 
+
+## 2. Clinical conflict {style="font-size:64%;"}
+
+::: incremental 
+* **Reality:** [competing risks]{.underline} preclude the occurrence of the primary endpoint [@Collett_2023], effectively affecting its existence or interpretation [@ICH_E9_R1_2019].
+
+* **Naive estimator:** can we simply treat them as [censored]{.underline}? Approach taken by the [standard Kaplan-Meier (1-KM) model]{.underline}.
+
+* **Estimation problem:** "Censoring" competing risks causes the 1-KM model to [overestimate]{.underline} the cumulative incidence of the event of interest [@Collett_2023].
+
+* **Estimand definition:** "The 1-KM estimate is the probability of (failing) beyond time $t$, if cause $j$ is the only cause of (failure), that is if all other risks were removed." [@Collett_2023; @Hernan_et_al_2025]
+:::
+
+[**Question:** How to ensure an unbiased, efficient estimate of the summary measure?]{.fragment}
+
+::: {.notes}
+
+* **Reality:** Different graft failures [compete]{.underline} to be the observed time-to-event endpoint.
+
+* **Naive estimator:** Since competing risks preclude the primary endpoint, can we simply treat them as [censored]{.underline} at the time of occurrence? This is the approach taken by the [standard Kaplan-Meier (1-KM) model]{.underline}, which analyzes one failure type at a time.
+
+* **Estimation problem:** "Censoring" competing risks causes the 1-KM model to [overestimate]{.underline} the cumulative incidence of the event of interest [@Collett_2023].
+
+* **Estimand definition:** "the analysis is effectively an attempt to simulate a population in which (failure) from other causes is somehow either abolished or rendered independent of the risk factors for (the event of interest). The resulting effect estimate is hard to interpret and may not correspond to a meaningful estimand" [@Hernan_et_al_2025]
+:::
+
+
+---
+
+## 3. Handling competing risks {style="font-size:64%;"}
+
+Consistent with the **strategies for addressing intercurrent events** [@ICH_E9_R1_2019], an alternative to the **hypothetical strategy** (targeted by 1-KM estimator) is to:
+
+::: incremental 
+* **Create a single composite event**, e.g., any cause of graft failure is considered an event. [This changes the question/estimand]{.underline} [@Hernan_et_al_2025].
+
+* **Restricting inference to the principal stratum**, e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment. [This needs a "challenging" counterfactual]{.underline} [@Hernan_et_al_2025].
+
+* **Apply the treatment policy strategy**. But in this case it may lead to [clinically nonsensical]{.underline} scenarios, e.g., consider the "re-transplant" problem.
+
+* **Follow a while-on-treatment strategy**, e.g., consider the "re-transplant" problem again. [This is what the Fine-Gray [F&G, @Fine_et_al_1999] and Jeong-Fine [J&F, @Jeong_et_al_2006; @Jeong_et_al_2007] estimators attempt to model.]{.fragment .underline}
+:::
+
+::: {.notes}
+* **Create a single composite event**, eliminates the competing events, but fundamentally changes the causal question (estimand) [@Hernan_et_al_2025]
+
+* **Restricting inference to the principal stratum**, This approach targets a specific subpopulation effect (e.g., the local average effect or LATE), which makes both interpretation and valid estimation especially challenging [@Hernan_et_al_2025].
+
+* **Apply the treatment policy strategy**. e.g., the "re-transplant" problem: if a patient receives a second transplant due to early HAT, and the second liver is rejected due to OR, the strategy could attribute this rejection to the first liver's treatment, because the strategy requires that you follow the patient until you see the event of interest.
+
+* **Follow a while-on-treatment strategy**, e.g., in the "re-transplant" problem, if a patient receives a second transplant due to early HAT, the strategy would evaluate the risk of graft failure due to OR only while the patient still has their first graft, "stopping the clock" at the moment of re-transplant.
+:::
+
+---
+
+## 4. Methodological Split: The F&G model {style="font-size:64%;"}
+
+::: {.fragment}
+The F&G model [@Fine_et_al_1999] defines "the instantaneous event rate at time $t$ from cause $j$, given that an individual has not previously died from cause $j$" as
+
+$$ 
+h_{j}(t) = \lim_{\delta t \rightarrow 0} \left[ \frac{P(t \leq T \leq t+\delta t, C=j) | \{ T \geq t \} \; \text{or} \; \{ T \leq t \; and \; C \neq j\}}{ \delta t } \right]
+$$ {#eq-FandG_p}
+:::
+
+::: {.fragment}
+where a [Proportional Hazard Cox model]{.underline} is assumed for the **subdistribution hazard function of cause $j$ at time $t$ for individual $i$**,
+
+$$
+h_{ij}(t) = exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) h_{0j}(t)
+$$ {#eq-FandG_hij}
+:::
+
+::: {.fragment}
+which results in a partial likelihood function for all $m$ causes as,
+
+$$
+L(\boldsymbol{\beta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} \frac{ exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) }{ \sum_{l \in R(t_{(h)})} w_{hl} exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} ) } 
+$$ {#eq-FandG_L}
+:::
+
+::: {.fragment}
+The model is best interpreted in terms of the effects of explanatory variables on the **cause-specific cumulative incidence function of the $j$th cause**,
+
+$$
+F_{ij}(t) = 1 - exp \left[ -exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) H_{0j}(t) \right]
+$$ {#eq-FandG_Hij}
+
+where the baseline cumulative subdistribution hazard function, $H_{0j}(t)$, is estimated using the Nelson-Aalen estimate [@Collett_2023].
+:::
+
+::: {.notes}
+The F&G model [@Fine_et_al_1999] is the [industry standard]{.underline}, but it utilizes a **risk set that is not straightforward to interpret**: it continues to include subjects who have experienced a competing event as if they were still at risk for other competing events.
+:::
+
+
+---
+
+## 4. Methodological Split: The J&F model {style="font-size:64%;"}
+
+::: {.fragment}
+In contrast, the J&F model [@Jeong_et_al_2006; @Jeong_et_al_2007] has a simpler definition for "the instantaneous event rate at time $t$ from cause $j$, in the presence of all other risks"
+
+$$ 
+h_{j}(t) = \lim_{\delta t \rightarrow 0} \left[ \frac{P(t \leq T \leq t+\delta t, C=j) | T \geq t }{ \delta t } \right]
+$$ {#eq-JandF_p}
+:::
+
+::: {.fragment}
+but a [Parametric Model]{.underline} is assumed for the **subdistribution hazard function of cause $j$ at time $t$ for individual $i$**, $h_{ij}(t, \boldsymbol{\theta})$, resulting in a likelihood function for all $m$ causes as,
+
+$$
+L(\boldsymbol{\beta},\boldsymbol{\theta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} h_{ij}(t, \boldsymbol{\theta})^{\delta_{ij}} \; exp[ -H_{ij}(t, \boldsymbol{\theta}) ]
+$$ {#eq-JandF_L}
+
+:::
+
+::: {.fragment}
+Similarly, the model is interpreted in terms of the effects of explanatory variables on the **cause-specific cumulative incidence function of the $j$th cause**,
+
+$$
+F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
+$$ {#eq-FandG_Hij}
+:::
+
+
+::: {.notes}
+**Benefit:** interpretable risk set.
+
+**Drawback:** $F_{ij}(t)$ usually requires numerical integration
+:::
+
+---
+
+## 5. Software implementation {style="font-size:64%;"}
+
+The following tools are available for model estimation:
+
+::: incremental
+- The frequentist estimation of the F&G model [@Fine_et_al_1999], is accessible via the `cmprsk` package [@Gray_2024] or `finegray` function within the `survival` package [@Therneau_et_al_2000; @Therneau_2026].
+
+- ... but the J&F model [@Jeong_et_al_2006; @Jeong_et_al_2007] lacks a dedicated "out-of-the-box" frequentist package. 
+:::
+
+::: {.fragment}
+However, **Bayesian** versions of both models can be implemented via `Stan` [@Stan_2026a; @Stan_2026b] using the `cmdstanr` interface package [@Gabry_et_al_2025b].  
+:::
+
+::: {.fragment}
+Benefits:
+
+::: incremental
+::: {style="font-size:80%;"}
+- Custom likelihoods
+- Uncertainty propagation
+- It does not rely on asymptotic theory
+- Possibility of getting the full posterior distribution for $F_{ij}(t)$
+::: 
+:::
+:::
+
+::: {.fragment}
+Drawbacks:
+
+::: incremental
+::: {style="font-size:80%;"}
+- Probabilistic Programming Language (PPL) knowledge
+- Justification for priors (see topic $7$)
+::: 
+:::
+:::
+
+::: {.notes}
+
+Benefits:
+
+- Allows the definition of [custom likelihoods]{.underline} not natively available in standard packages.
+- Provides a posterior distribution that propagates all parameter [uncertainty]{.underline}.
+- [Does not rely on asymptotic theory]{.underline}, making it more robust in small-sample scenarios.
+- The [Bayesian J&F model]{.underline} yields the full posterior distribution for the cumulative incidence function, $F_{ij}(t)$.
+
+Drawbacks:
+
+- Frequentist analysis requires optimization knowledge.  
+:::
+
+
+---
+
+## 6. Technical depth: The F&G model, Cox partial likelihood {style="font-size:64%;"}
+
+The log-likelihood for @eq-FandG_L is,
+
+$$
+\log L(\boldsymbol{\beta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} \; \cdot \log \left\{ \sum_{l \in R(t_{(h)})} exp \left[ \log(w_{hl}) + \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} \right] \right\} 
+$$ {#eq-FandG_logL}
+
+Sorting data in descending order by event times, the Bayesian model is as follows:
+
+```{{r}}
+StanModel = "
+data {
+  int<lower=0> m; // number of causes
+  int<lower=0> n; // num obs
+  int<lower=0> q; // num covariates
+  vector[n] t;    // time
+  matrix[n,m] s;  // cause of failure
+  matrix[n,q] x;  // covariates
+  vector[n] w;    // weights
+}
+parameters {
+  matrix[q,m] beta; // beta[covariate,cause]
+}
+model {
+  // priors
+  to_vector(beta) ~ normal(0, 2);
+  
+  // risk score
+  matrix[n,m] rs = x*beta;
+  
+  for( j in 1:m ){
+    for( i in 1:n ) {
+      if( s[i,j]==1 ){
+        real log_den = log_sum_exp( log(w[1:i]) + rs[1:i, j] );
+        target += rs[i,j] - log_den;
+      }
+    }
+  }
+}
+```
+
+---
+
+## 6. Technical depth: the J&F model, Weibull baseline hazard {style="font-size:64%;"}
+
+The log-likelihood for @eq-JandF_L is,
+
+$$
+log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \delta_{ij} \cdot log \; h_{ij}(t,\boldsymbol{\theta}) - H_{ij}(t,\boldsymbol{\theta}) 
+$$ {#eq-JandF_logL}
+
+and the Bayesian model is defined as:
+
+```{{r}}
+StanModel = "
+functions{
+  // Based on Jeong et al (2006) Equations (9), (10), and (13)
+  // cause-specific log hazard function
+  real log_hij( real t, real rs, real lambda, real gamma ){
+    return( rs + log(lambda) + log(gamma) + (gamma-1)*log(t) );
+  }
+  // cause-specific cummulative hazard function
+  real Hij( real t, real rs, real lambda, real gamma ){
+    return( exp( rs ) * lambda * t^gamma ); 
+  }
+  // overall log-survival function
+  real log_S( real t, vector rs, vector lambda, vector gamma, int m ) {
+    real oSt = 0;
+    for (j in 1:m) {
+      oSt += Hij(t, rs[j], lambda[j], gamma[j]);
+    }
+    return(-oSt);
+  }
+  // cause specific log-density
+  real log_fij( real t, int j, vector rs, vector lambda, vector gamma, int m ){
+    return ( log_hij( t, rs[j], lambda[j], gamma[j] ) + 
+             log_S( t, rs, lambda, gamma, m ) );
+  }
+  // Integrand for the density function
+  real fij(real t, real xc, array[] real theta, array[] real x_r, array[] int x_i) {
+    // parameters and data
+    int j = x_i[1];
+    int m = x_i[2];
+    vector[m] rs = to_vector( theta[1:m] );
+    vector[m] lambda = to_vector( theta[(m+1):(2*m)] );
+    vector[m] gamma =  to_vector( theta[(2*m+1):(3*m)] );
+    return( exp( log_fij( t, j, rs, lambda, gamma, m ) ) );
+  }
+}
+data {
+  // fitting data
+  int<lower=0> m;       // number of causes
+  int<lower=0> n;       // num obs
+  int<lower=0> q;       // num covariates
+  vector[n] t;          // time
+  matrix[n,m] s;        // cause of failure
+  matrix[n,q] X;        // covariates
+  
+  // For Marginal Approximation
+  int<lower=1> ms;      // Number of Monte Carlo draws (e.g., 100)
+  int<lower=0> ns;      // number of time samples
+  vector[ns] ts;        // time samples
+  matrix[1,q] xs;       // covariates for simulation
+}
+parameters {
+  matrix[q,m] beta;           // beta[covariate,cause]
+  vector<lower=0>[m] lambda;  // lambda[cause]
+  vector<lower=0>[m] gamma;   // gamma[cause]
+}
+model {
+  // priors
+  to_vector(beta) ~ normal(0,2);
+  lambda ~ exponential(2);
+  gamma ~ gamma(8,5); 
+  
+  // risk score
+  matrix[n,m] rs = X*beta;
+  
+  // model
+  // Following Equation (12.9) from Collett (2023)
+  for( j in 1:m ){
+    for( i in 1:n ){
+      target += s[i,j] * log_hij( t[i], rs[i,j], lambda[j], gamma[j] ) -
+                Hij( t[i], rs[i,j], lambda[j], gamma[j] );
+    }
+  }
+}
+generated quantities {
+  matrix[ns,m] Fij_MC; // Cumulative Incidence Functions
+  matrix[ns,m] Fij_I;
+  
+  // risk score
+  vector[m] rs = to_vector(xs*beta);
+  
+  // flatten all parameters into a single array 3*m = m(rs) + m(lambda) + m(gamma) 
+  array[3*m] real flat_theta;
+  for (j in 1:m) {
+    flat_theta[j] = rs[j];
+    flat_theta[m+j] = lambda[j];
+    flat_theta[2*m+j] = gamma[j];
+  }
+  
+  for (i in 1:ns) {
+    for (j in 1:m) {
+      // Integrate using Monte Carlo approximation
+      real fij_sum = 0;
+      for (k in 1:ms) {
+        real u = uniform_rng(0, ts[i]);
+        fij_sum += exp(log_fij(u, j, rs, lambda, gamma, m));
+      }
+      Fij_MC[i,j] = ts[i] * (fij_sum / ms); 
+      // Integrate using Double Exponential Quadrature
+      Fij_I[i,j] = integrate_1d( fij, 0.0, ts[i], flat_theta, {0.0}, {j,m} );
+    }
+  }
+}
+"
+```
+
+---
+
+## 7. Validation and regulatory aligment {style="font-size:64%;"}
+
+Per the **FDA Draft Guidance on Bayesian Methodology** [@FDA_Bayesian_2026], utilizing the J&F model [@Jeong_et_al_2006; @Jeong_et_al_2007] requires the creation of two core documents: 
+
+::: incremental
+- A detailed Bayesian analysis plan (BAP)
+- A comprehensive simulation report ([if necessary]{.underline})
+:::
+
+::: {.fragment}
+Together, they should allow the regulatory authority to assess:
+
+::: incremental
+1. The proposed prior distribution, e.g., "flavors" and scenarios
+2. The validity of the likelihood, already required for SAP
+3. The posterior and proposed success criteria, that is, $P(d>a)>c$
+4. The appropriateness of the operating characteristics of the trial, such as FWER, bias, MSE.
+5. Software and reproducibility, ensuring GCP-compliant environments
+:::
+:::
+
+::: {.notes}
+1. [The proposed prior distribution]{.underline}
+
+- Distinguishing between Design and Analysis priors.
+- Categorizing by "flavor": Noninformative, Weakly informative, Skeptical, or Informative.
+- Assessing results under various scenarios.
+
+2. [The validity of the likelihood]{.underline}
+
+- Justifying the parametric assumptions for the J&F subdistribution hazard.
+
+3. [The posterior and proposed success criteria]{.underline}
+
+- Its definition, e.g., $P(d>a)>c$ (where $d$ is the treatment effect, $a$ is the clinical relevance threshold, and $c$ is the probability requirement).
+
+4. [The appropriateness of the operating characteristics of the trial]{.underline}
+
+- The justification for sample size and associated power.
+- The FWER (Type I Error) calibration. 
+- The assessment of bias, MSE, coverage probability, and width of confidence intervals across a range of scenarios.
+
+5. [Software and Reproducibility]{.underline}
+
+- making sure to use GCP-compliant environments (e.g., `cmdstanr`).
+- Providing code to allow verification of sampling properties and reliability.
+:::
+
+---
+
+## 8. Results for the motivating example {style="font-size:64%;"}
+
+
+
+
+---
+
+## 9. CDISC Standards and traceability {style="font-size:64%;"}
+
+This example used a pre-processed dataset. However, the standard clinical trial workflow would involve a rigorous data pipeline to ensure traceability and regulatory compliance. 
+
+::: {.fragment}
+Some steps of this "missing" workflow include:
+
+::: incremental
+- Mapping raw source data to formal SDTM domains,
+- Cleaning and validating SDTM inputs to ensure data integrity,
+- Deriving the ADaM ADTTE dataset,
+- and more
+:::
+:::
+
+::: {.notes}
+* [Mapping raw source data to formal SDTM domains]{.underline}, for this purpose I would use the `sdtm.oak` package [@Ganapathy_et_al_2025]
+
+* [Cleaning and validating SDTM inputs to ensure data integrity]{.underline}, like the **DS** (Disposition) and **RS** (Response) domains.
+
+* [Deriving the ADaM ADTTE dataset]{.underline}, for this purpose I would use the `admiral` package [@Straub_et_al_2026], distinguishing between 'censored', 'target event' and 'competing event'.
+:::
+
+---
+
+## 10. Business value for Medpace {style="font-size:64%;"}
+
+Implementing advanced Bayesian models differentiates **Medpace** as a high-tier technical partner, ready to propose complex designs under the [FDA Complex Innovative Trial Design (CID) program](https://www.fda.gov/drugs/development-resources/complex-innovative-trial-design-meeting-program)
+
+Specifically, the Bayesian J&F model provides:
+
+::: incremental
+1. Direct interpretability for clinicians and regulatory bodies,
+2. Integrated handling of missing data [@FDA_Bayesian_2026]
+3. Efficiency via information borrowing [@FDA_Bayesian_2026]
+4. Stable extrapolation and prediction capabilities 
+5. Robustness in small-sample settings
+:::
+
+::: {.notes}
+
+- [Direct Interpretability for clinicians and regulatory bodies]{.underline}
+  
+    The Bayesian J&F model provides the direct cumulative Incidence. This is far more intuitive for clinicians and regulatory reviewers making risk-benefit assessments.
+
+- [Integrated handling of missing data]{.underline}
+
+    The Bayesian J&F model can treat missing data as part of the parameter estimation process. This could provide a more robust posterior distribution than standard imputation, reducing the risk of biased results in high-attrition trials.
+
+- [Efficiency via information borrowing]{.underline}
+    
+    The Bayesian J&F model has ability to incorporate informative priors (from historical data or RWE) which can potentially reduce the sample size required for current trials
+
+- [Stable extrapolation and prediction capabilities]{.underline}
+    
+    The parametric nature of the Bayesian J&F model allows for stable prediction beyond the last observed event time.
+
+- [Robustness in small-sample settings]{.underline}
+    
+    In scenarios where frequentist asymptotic assumptions fail, e.g., in cases of rare diseases where there is small $N$ or few events, the Bayesian J&F remains valid.
+
+:::
+
+---
+
+## Questions? {style="font-size:64%;"}
+
+::: {.notes}
+To conclude I can say that, 
+
+1. I can bring my PhD-level Bayesian expertise to the Leuven office.
+2. I have the CDISC knowledge to make these analyses "submission-ready" from day one.
+3. I am ready to operationalize these workflows starting from **April**.
+:::
+
+---
+
+## References {style="font-size:80%;"}
+
+:::{#refs style="font-size:80%;"}
+
+:::
