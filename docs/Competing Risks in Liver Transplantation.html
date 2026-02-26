@@ -449,7 +449,10 @@ Jose Manuel Rivera Espejo
 </section>
 <section id="motivating-example" class="slide level2" style="font-size:60%;">
 <h2>1. Motivating example</h2>
-<p>Consistent with the <strong>Estimands framework</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, a liver transplant case study should define at least the following attributes:</p>
+<p>A liver transplant case study sourced from Collett <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>.</p>
+<div class="fragment">
+<p>Consistent with the <strong>Estimands framework</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>, a study protocol should define the following attributes:</p>
+</div>
 <div>
 <ol type="1">
 <li class="fragment"><strong>Population:</strong> adult elective transplant recipients from a deceased donor.</li>
@@ -473,7 +476,7 @@ Jose Manuel Rivera Espejo
 <ul>
 <li class="fragment">Hepatic artery thrombosis (HAT),</li>
 <li class="fragment">Recurrent disease (RD),</li>
-<li class="fragment">Other reasons, including death (Other)</li>
+<li class="fragment">Other reasons (Other)</li>
 </ul>
 </div>
 </div>
@@ -482,8 +485,13 @@ Jose Manuel Rivera Espejo
 </ol>
 </div>
 <aside class="notes">
-<p><strong>Note:</strong> example is based on a case study from Collett <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>, but the specific data are illustrative and not identical to the original source.</p>
-<p><strong>primary liver diseases</strong> include - primary biliary cirrhosis (PBC) - primary sclerosing cholangitis (PSC) and - alcoholic liver disease (ALD)</p>
+<p><strong>Note:</strong> data not identical to the original source, only illustrative for the purpose of the presentation.</p>
+<p><strong>primary liver diseases</strong> include</p>
+<ul>
+<li>primary biliary cirrhosis (PBC)</li>
+<li>primary sclerosing cholangitis (PSC) and</li>
+<li>alcoholic liver disease (ALD)</li>
+</ul>
 <p><strong>summary measure</strong> is purposely not precise enough to make a point.</p>
 <p><strong>additional considerations:</strong> Given the success of liver transplantation, data presents <u>heavy censoring</u>, with only <span class="math inline">\(15\%\)</span> (<span class="math inline">\(n=260\)</span>) of individuals experienced graft failure from any cause, and <span class="math inline">\(1.6\%\)</span> (<span class="math inline">\(n=29\)</span>) specifically from OR.</p>
 <style type="text/css">
@@ -506,9 +514,9 @@ Jose Manuel Rivera Espejo
 <li class="fragment"><p><strong>Naive estimator:</strong></p>
 <p>Can we simply treat competing risks as censored? That is the approach of the naive Kaplan-Meier (KM) estimator</p></li>
 <li class="fragment"><p><strong>Estimation problem:</strong></p>
-<p>“Censoring” competing risks causes the naive KM estimator to overestimate the cumulative incidence of the event of interest <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p></li>
+<p>“Censoring” competing risks causes the naive KM estimator to overestimate the cumulative incidence of the event of interest <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>.</p></li>
 <li class="fragment"><p><strong>Estimand definition:</strong></p>
-<p>“The 1-KM estimate is the probability of (failing) beyond time <span class="math inline">\(t\)</span>, if cause <span class="math inline">\(j\)</span> is the only cause of (failure), that is if all other risks were removed.” <span class="citation" data-cites="Collett_2023 Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">2</a>, <a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
+<p>“The naive KM estimate is the probability of (failing) beyond time <span class="math inline">\(t\)</span>, if cause <span class="math inline">\(j\)</span> is the only cause of (failure), that is if all other risks were removed.” <span class="citation" data-cites="Collett_2023 Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">1</a>, <a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
 </ul>
 </div>
 <div class="fragment">
@@ -532,7 +540,7 @@ Jose Manuel Rivera Espejo
 </section>
 <section id="handling-competing-risks" class="slide level2" style="font-size:60%;">
 <h2>3. Handling competing risks</h2>
-<p>Consistent with the <strong>strategies for addressing intercurrent events</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, alternatives to the <strong>hypothetical strategy</strong> (targeted by naive KM estimator) include:</p>
+<p>Consistent with the <strong>strategies for addressing intercurrent events</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>, alternatives to the <strong>hypothetical strategy</strong> (targeted by naive KM estimator) include:</p>
 <div>
 <ul>
 <li class="fragment"><p><strong>Create a single composite event</strong>,</p>
@@ -592,10 +600,10 @@ L(\boldsymbol{\beta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} \frac{ exp( \boldsymbol{
 <p><span id="eq-FandG_Hij"><span class="math display">\[
 F_{ij}(t,\boldsymbol{\beta}) = 1 - exp \left[ -exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) H_{0j}(t) \right]
 \qquad(4)\]</span></span></p>
-<p>where the baseline cumulative subdistribution hazard function, <span class="math inline">\(H_{0j}(t)\)</span>, is estimated using the Nelson-Aalen estimate <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p>
+<p>where the baseline cumulative subdistribution hazard function, <span class="math inline">\(H_{0j}(t)\)</span>, is estimated using the Nelson-Aalen estimate <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>.</p>
 </div>
 <aside class="notes">
-<p><span class="math inline">\(h_{j}(t)\)</span> is “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, given that an individual has not previously died from cause <span class="math inline">\(j\)</span>” <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span></p>
+<p><span class="math inline">\(h_{j}(t)\)</span> is “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, given that an individual has not previously died from cause <span class="math inline">\(j\)</span>” <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span></p>
 <p>The F&amp;G model is the <u>industry standard</u>, but it utilizes a <strong>risk set that is not straightforward to interpret</strong>: it continues to include subjects who have experienced a competing event as if they were still at risk for other competing events.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -639,7 +647,7 @@ F_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) = \int_{0}^{t} f_{ij}(u,\boldsy
 \qquad(8)\]</span></span></p>
 </div>
 <aside class="notes">
-<p><span class="math inline">\(h_{j}(t)\)</span> is “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, given that an individual has not experineces any event at time <span class="math inline">\(t\)</span>” <span class="citation" data-cites="Collett_2023 Jeong_et_al_2006">[<a href="#/references" role="doc-biblioref" onclick="">2</a>, <a href="#/references" role="doc-biblioref" onclick="">5</a>]</span></p>
+<p><span class="math inline">\(h_{j}(t)\)</span> is “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, given that an individual has not experienced any event at time <span class="math inline">\(t\)</span>” <span class="citation" data-cites="Collett_2023 Jeong_et_al_2006">[<a href="#/references" role="doc-biblioref" onclick="">1</a>, <a href="#/references" role="doc-biblioref" onclick="">5</a>]</span></p>
 <p><strong>Benefit:</strong> interpretable risk set.</p>
 <p><strong>Drawback:</strong> <span class="math inline">\(F_{ij}(t)\)</span> usually requires numerical integration</p>
 <style type="text/css">
@@ -685,14 +693,20 @@ F_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) = \int_{0}^{t} f_{ij}(u,\boldsy
 <div style="font-size:80%;">
 <ul>
 <li class="fragment">Probabilistic Programming Language (PPL) knowledge</li>
-<li class="fragment">Justification for priors (see Slide <span class="math inline">\(7\)</span>)</li>
+<li class="fragment">Justification for priors (see Topic <span class="math inline">\(7\)</span>)</li>
 </ul>
 </div>
 </div>
 </div>
 <aside class="notes">
 <p>Robust and flexible alternative to the missing frequentist implementation</p>
-<p>Benefits: - Allows the definition of <u>custom likelihoods</u> not natively available in standard packages. - Provides a posterior distribution that propagates all parameter <u>uncertainty</u>. - <u>Does not rely on asymptotic theory</u>, making it more robust in small-sample scenarios. - The <u>Bayesian J&amp;F model</u> yields the full posterior distribution for the cumulative incidence function, <span class="math inline">\(F_{ij}(t)\)</span>.</p>
+<p>Benefits:</p>
+<ul>
+<li>Allows the definition of <u>custom likelihoods</u> not natively available in standard packages.</li>
+<li>Provides a posterior distribution that propagates all parameter <u>uncertainty</u>.</li>
+<li><u>Does not rely on asymptotic theory</u>, making it more robust in small-sample scenarios.</li>
+<li>The <u>Bayesian J&amp;F model</u> yields the full posterior distribution for the cumulative incidence function, <span class="math inline">\(F_{ij}(t)\)</span>.</li>
+</ul>
 <p>Drawbacks:</p>
 <ul>
 <li>Frequentist analysis requires optimization knowledge.<br>
@@ -714,7 +728,7 @@ F_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) = \int_{0}^{t} f_{ij}(u,\boldsy
 <h2>6. Bayesian implementation: The Fine-Gray model</h2>
 <p>The partial log-likelihood for <a href="#/model-definition-the-fine-gray-model" class="quarto-xref">Equation&nbsp;3</a> is,</p>
 <p><span id="eq-FandG_logL"><span class="math display">\[
-\log L(\boldsymbol{\beta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} \; \cdot \log \left\{ \sum_{l \in R(t_{(h)})} exp \left[ \log(w_{hl}) + \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} \right] \right\}
+\log L(\boldsymbol{\beta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} - \log \left\{ \sum_{l \in R(t_{(h)})} exp \left[ \log(w_{hl}) + \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} \right] \right\}
 \qquad(9)\]</span></span></p>
 <p>Sorting data in descending order by event times, the Bayesian model is as follows:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a></a><span class="in">```{r}</span></span>
@@ -1651,6 +1665,7 @@ Treatment effect adjusted for covariate
 </div>
 <aside class="notes">
 <p>from <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a>: - Table Efficacy <code>COXT01</code> - Graphs Efficacy <code>KMG01</code></p>
+<p><strong>Note:</strong> patients that receive solution A have lower risk of graft failure from OR, than patients on Solution B</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -3158,11 +3173,11 @@ Treatment effect adjusted for covariate
 <section id="references" class="slide level2 smaller scrollable" style="font-size:60%;">
 <h2>References</h2>
 <div id="refs" class="references csl-bib-body" style="font-size:80%;" role="list">
-<div id="ref-ICH_E9_R1_2019" class="csl-entry" role="listitem">
-<div class="csl-left-margin">1. </div><div class="csl-right-inline">ICH (2019) <a href="https://database.ich.org/sites/default/files/E9-R1_Step4_Guideline_2019_1203.pdf">E9(R1) addendum on estimands and sensitivity analysis in clinical trials to the E9 guideline on statistical principles for clinical trials</a>. 1–22</div>
-</div>
 <div id="ref-Collett_2023" class="csl-entry" role="listitem">
-<div class="csl-left-margin">2. </div><div class="csl-right-inline">Collett D (2023) <a href="https://doi.org/10.1201/9781003282525">Modelling survival data in medical research</a>. Chapman; Hall/CRC</div>
+<div class="csl-left-margin">1. </div><div class="csl-right-inline">Collett D (2023) <a href="https://doi.org/10.1201/9781003282525">Modelling survival data in medical research</a>. Chapman; Hall/CRC</div>
+</div>
+<div id="ref-ICH_E9_R1_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">2. </div><div class="csl-right-inline">ICH (2019) <a href="https://database.ich.org/sites/default/files/E9-R1_Step4_Guideline_2019_1203.pdf">E9(R1) addendum on estimands and sensitivity analysis in clinical trials to the E9 guideline on statistical principles for clinical trials</a>. 1–22</div>
 </div>
 <div id="ref-Hernan_et_al_2025" class="csl-entry" role="listitem">
 <div class="csl-left-margin">3. </div><div class="csl-right-inline">Hernán M, Robins J (2025) <a href="">Causal inference: What if</a>, 1st ed. Chapman; Hall/CRC</div>

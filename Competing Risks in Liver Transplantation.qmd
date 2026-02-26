@@ -35,7 +35,11 @@ include-in-header:
 
 ## 1. Motivating example {style="font-size:60%;"}
 
-Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplant case study should define at least the following attributes:
+A liver transplant case study sourced from Collett [@Collett_2023].
+
+::: {.fragment}
+Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a study protocol should define the following attributes:
+:::
 
 ::: incremental 
 1. **Population:** adult elective transplant recipients from a deceased donor.
@@ -58,7 +62,7 @@ Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplan
 ::: {style="font-size:80%;"}
 - Hepatic artery thrombosis (HAT),
 - Recurrent disease (RD),
-- Other reasons, including death (Other)
+- Other reasons (Other)
 :::
 :::
 
@@ -67,9 +71,10 @@ Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplan
 :::
 
 ::: {.notes}
-**Note:** example is based on a case study from Collett [@Collett_2023], but the specific data are illustrative and not identical to the original source.
+**Note:**  data not identical to the original source, only illustrative for the purpose of the presentation.
 
 **primary liver diseases** include
+
 - primary biliary cirrhosis (PBC) 
 - primary sclerosing cholangitis (PSC) and
 - alcoholic liver disease (ALD)
@@ -97,7 +102,7 @@ Different graft failures (competing risks) can preclude the occurrence of failur
 
 * **Estimand definition:** 
 
-    "The 1-KM estimate is the probability of (failing) beyond time $t$, if cause $j$ is the only cause of (failure), that is if all other risks were removed." [@Collett_2023; @Hernan_et_al_2025]
+    "The naive KM estimate is the probability of (failing) beyond time $t$, if cause $j$ is the only cause of (failure), that is if all other risks were removed." [@Collett_2023; @Hernan_et_al_2025]
 :::
 
 ::: {.fragment}
@@ -234,7 +239,7 @@ $$ {#eq-FandG_Hij}
 :::
 
 ::: {.notes}
-$h_{j}(t)$ is "the instantaneous event rate at time $t$ from cause $j$, given that an individual has not experineces any event at time $t$" [@Collett_2023; @Jeong_et_al_2006]
+$h_{j}(t)$ is "the instantaneous event rate at time $t$ from cause $j$, given that an individual has not experienced any event at time $t$" [@Collett_2023; @Jeong_et_al_2006]
 
 **Benefit:** interpretable risk set.
 
@@ -275,7 +280,7 @@ Drawbacks:
 ::: incremental
 ::: {style="font-size:80%;"}
 - Probabilistic Programming Language (PPL) knowledge
-- Justification for priors (see Slide $7$)
+- Justification for priors (see Topic $7$)
 ::: 
 :::
 :::
@@ -284,6 +289,7 @@ Drawbacks:
 Robust and flexible alternative to the missing frequentist implementation
 
 Benefits:
+
 - Allows the definition of [custom likelihoods]{.underline} not natively available in standard packages.
 - Provides a posterior distribution that propagates all parameter [uncertainty]{.underline}.
 - [Does not rely on asymptotic theory]{.underline}, making it more robust in small-sample scenarios.
@@ -302,7 +308,7 @@ Drawbacks:
 The partial log-likelihood for @eq-FandG_L is,
 
 $$
-\log L(\boldsymbol{\beta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} \; \cdot \log \left\{ \sum_{l \in R(t_{(h)})} exp \left[ \log(w_{hl}) + \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} \right] \right\} 
+\log L(\boldsymbol{\beta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} - \log \left\{ \sum_{l \in R(t_{(h)})} exp \left[ \log(w_{hl}) + \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} \right] \right\} 
 $$ {#eq-FandG_logL}
 
 Sorting data in descending order by event times, the Bayesian model is as follows:
@@ -722,6 +728,8 @@ hr_cof[,c(5,1:4,7)] %>%
 from [TLG Catalog](https://insightsengineering.github.io/tlg-catalog/stable/):
 - Table Efficacy `COXT01` 
 - Graphs Efficacy `KMG01`
+
+**Note:** patients that receive solution A have lower risk of graft failure from OR, than patients on Solution B 
 :::
 
 ---
