@@ -5,6 +5,9 @@ author: "Jose Manuel Rivera Espejo"
 date: last-modified
 date-format: "DD MMMM YYYY"
 bibliography: references.bib
+title-slide-attributes: 
+  data-notes: |
+    Welcome again May Taha, Ping Xu, Jiqiu Cheng, Ashley Campbell
 include-in-header:
   - text: |
       <style>
