@@ -804,7 +804,7 @@ for( j in 1:max(ds$cof) ){
       add_risktable() +
       scale_ggsurvfit( 
         x_scales = list(breaks=seq(0,max(ds$time), by=500)),
-        y_scales = list(limits=c(0,0.15)) )
+        y_scales = list(limits=c(0,0.07)) )
   )
 }
 
@@ -995,9 +995,31 @@ Fij_I = readRDS(
     'results',
     paste0('ARD_B_JF_cumincI.RDS') ) )
 
-
+# save additional ADRs
 t = seq(1, max(ds$time), by=3)
+idx = str_detect( Fij_I$variable, '1[:punct:]$' )
+Fij_I_mom = Fij_I[idx,]
 
+
+
+# plot 1
+plot( t, Fij_I_mom$mean, type='l', lwd=4, lty=1, ylim=c(0,0.07),
+      ylab = "Cumulative incidence" ,
+      xlab = "Time" )
+for(i in 1:length(t)){
+  lines( 
+    x = rep(t[i],2), 
+    y = with(Fij_I_mom[i,], c(q5, q95) ), 
+    col=rgb(0,0,0,0.1) )  
+}
+legend( 'topleft', bty='n', lty=c(1,1,1),  
+        col=c('white','black', rgb(0,0,0,0.3)),
+        legend=c( paste0('P(C=',1,') = ', round( tail(Fij_I$mean[idx], 1), 2) ),
+                  'Mean incidence', 
+                  '90% CI') )
+
+
+# plot 2
 par(mfrow=c(2,2))
 for( j in 1:4 ){
   idx = str_detect( Fij_MC$variable, paste0(j,'[:punct:]$') )
@@ -1009,5 +1031,3 @@ for( j in 1:4 ){
                     'Monte Carlo approx') )
 }
 par(mfrow=c(1,1))
-
-

@@ -88,7 +88,7 @@
     "href": "Competing Risks in Liver Transplantation.html#results-frequentist-fine-gray-model-1",
     "title": "Competing Risks in Liver Transplantation",
     "section": "7. Results: Frequentist Fine-Gray model",
-    "text": "7. Results: Frequentist Fine-Gray model\n\n\n\nFine-Gray failures plot (Equivalence: KMG01)\n### Fine-Gray failures plot ####\n# (Equivalence: KMG01)\n\n# require(ggsurvfit)\n\ncof = c('Organ Rejection', \n        'Hepatic Artery Thrombosis', \n        'Recurrent Disease', \n        'Other')\n\nfor( j in 1:max(ds$cof) ){\n  assign( \n    paste0('F', j),\n    cuminc( \n      Surv(time, cof_label) ~ treatment_label, \n      data = ds ) %&gt;%\n      ggcuminc( outcome = cof[j] ) +\n      add_confidence_interval() +\n      add_risktable() +\n      scale_ggsurvfit( \n        x_scales = list(breaks=seq(0,max(ds$time), by=500)),\n        y_scales = list(limits=c(0,0.15)) )\n  )\n}\n\nF1"
+    "text": "7. Results: Frequentist Fine-Gray model\n\n\n\nFine-Gray failures plot (Equivalence: KMG01)\n### Fine-Gray failures plot ####\n# (Equivalence: KMG01)\n\n# require(ggsurvfit)\n\ncof = c('Organ Rejection', \n        'Hepatic Artery Thrombosis', \n        'Recurrent Disease', \n        'Other')\n\nfor( j in 1:max(ds$cof) ){\n  assign( \n    paste0('F', j),\n    cuminc( \n      Surv(time, cof_label) ~ treatment_label, \n      data = ds ) %&gt;%\n      ggcuminc( outcome = cof[j] ) +\n      add_confidence_interval() +\n      add_risktable() +\n      scale_ggsurvfit( \n        x_scales = list(breaks=seq(0,max(ds$time), by=500)),\n        y_scales = list(limits=c(0,0.07)) )\n  )\n}\n\nF1"
   },
   {
     "objectID": "Competing Risks in Liver Transplantation.html#results-bayesian-fine-gray-model",
@@ -114,6 +114,13 @@
   {
     "objectID": "Competing Risks in Liver Transplantation.html#results-bayesian-jeong-fine-model-2",
     "href": "Competing Risks in Liver Transplantation.html#results-bayesian-jeong-fine-model-2",
+    "title": "Competing Risks in Liver Transplantation",
+    "section": "7. Results: Bayesian Jeong-Fine model",
+    "text": "7. Results: Bayesian Jeong-Fine model\n\n\nBayesian Jeong-Fine failures plot (Equivalence: KMG01)\n### Jeong-Fine failures plot ####\n# (Equivalence: KMG01)\n\n# load ADR?\nFij_MC = readRDS( \n  file.path( \n    here(),\n    'results',\n    paste0('ARD_B_JF_cumincMC.RDS' ) ) )\n\nFij_I = readRDS( \n  file.path( \n    here(),\n    'results',\n    paste0('ARD_B_JF_cumincI.RDS') ) )\n\nt = seq(1, max(ds$time), by=3)\n\nidx = str_detect( Fij_I$variable, '1[:punct:]$' )\nFij_I_mom = Fij_I[idx,]\nplot( t, Fij_I_mom$mean, type='l', lwd=4, lty=1, ylim=c(0,0.07),\n      ylab = \"Cumulative incidence\" ,\n      xlab = \"Time\" )\nfor(i in 1:length(t)){\n  lines( \n    x = rep(t[i],2), \n    y = with(Fij_I_mom[i,], c(q5, q95) ), \n    col=rgb(0,0,0,0.1) )  \n}\nlegend( 'topleft', bty='n', lty=c(1,1,1),  \n        col=c('white','black', rgb(0,0,0,0.3)),\n        legend=c( paste0('P(C=',1,') = ', round( tail(Fij_I$mean[idx], 1), 2) ),\n                  'Mean incidence', \n                  '90% CI') )"
+  },
+  {
+    "objectID": "Competing Risks in Liver Transplantation.html#results-bayesian-jeong-fine-model-3",
+    "href": "Competing Risks in Liver Transplantation.html#results-bayesian-jeong-fine-model-3",
     "title": "Competing Risks in Liver Transplantation",
     "section": "7. Results: Bayesian Jeong-Fine model",
     "text": "7. Results: Bayesian Jeong-Fine model\n\n\nBayesian Jeong-Fine failures plot (Equivalence: KMG01)\n### Jeong-Fine failures plot ####\n# (Equivalence: KMG01)\n\n# load ADR?\nFij_MC = readRDS( \n  file.path( \n    here(),\n    'results',\n    paste0('ARD_B_JF_cumincMC.RDS' ) ) )\n\nFij_I = readRDS( \n  file.path( \n    here(),\n    'results',\n    paste0('ARD_B_JF_cumincI.RDS') ) )\n\nt = seq(1, max(ds$time), by=3)\n\npar(mfrow=c(2,2))\nfor( j in 1:4 ){\n  idx = str_detect( Fij_MC$variable, paste0(j,'[:punct:]$') )\n  plot( t, Fij_I$mean[idx], type='l', lwd=4, lty=1, ylim=c(0,0.15),\n        ylab = \"Cumulative incidence\" ,\n        xlab = \"Time\" )\n  lines( t, Fij_MC$mean[idx], col='red', lty=2)\n  legend( 'topleft', bty='n', col=c('white','black','red'), lty=c(1,1,2),\n          legend=c( paste0('P(C=',j,') = ', round( tail(Fij_I$mean[idx], 1), 2) ),\n                    'Double Exponential Quadrature', \n                    'Monte Carlo approx') )\n}"

@@ -1690,7 +1690,7 @@ Treatment effect adjusted for covariate
 <span id="cb10-19"><a></a>      <span class="fu">add_risktable</span>() <span class="sc">+</span></span>
 <span id="cb10-20"><a></a>      <span class="fu">scale_ggsurvfit</span>( </span>
 <span id="cb10-21"><a></a>        <span class="at">x_scales =</span> <span class="fu">list</span>(<span class="at">breaks=</span><span class="fu">seq</span>(<span class="dv">0</span>,<span class="fu">max</span>(ds<span class="sc">$</span>time), <span class="at">by=</span><span class="dv">500</span>)),</span>
-<span id="cb10-22"><a></a>        <span class="at">y_scales =</span> <span class="fu">list</span>(<span class="at">limits=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.15</span>)) )</span>
+<span id="cb10-22"><a></a>        <span class="at">y_scales =</span> <span class="fu">list</span>(<span class="at">limits=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.07</span>)) )</span>
 <span id="cb10-23"><a></a>  )</span>
 <span id="cb10-24"><a></a>}</span>
 <span id="cb10-25"><a></a></span>
@@ -2931,22 +2931,65 @@ Treatment effect adjusted for covariate
 <span id="cb13-16"><a></a></span>
 <span id="cb13-17"><a></a>t <span class="ot">=</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">max</span>(ds<span class="sc">$</span>time), <span class="at">by=</span><span class="dv">3</span>)</span>
 <span id="cb13-18"><a></a></span>
-<span id="cb13-19"><a></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
-<span id="cb13-20"><a></a><span class="cf">for</span>( j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span> ){</span>
-<span id="cb13-21"><a></a>  idx <span class="ot">=</span> <span class="fu">str_detect</span>( Fij_MC<span class="sc">$</span>variable, <span class="fu">paste0</span>(j,<span class="st">'[:punct:]$'</span>) )</span>
-<span id="cb13-22"><a></a>  <span class="fu">plot</span>( t, Fij_I<span class="sc">$</span>mean[idx], <span class="at">type=</span><span class="st">'l'</span>, <span class="at">lwd=</span><span class="dv">4</span>, <span class="at">lty=</span><span class="dv">1</span>, <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.15</span>),</span>
-<span id="cb13-23"><a></a>        <span class="at">ylab =</span> <span class="st">"Cumulative incidence"</span> ,</span>
-<span id="cb13-24"><a></a>        <span class="at">xlab =</span> <span class="st">"Time"</span> )</span>
-<span id="cb13-25"><a></a>  <span class="fu">lines</span>( t, Fij_MC<span class="sc">$</span>mean[idx], <span class="at">col=</span><span class="st">'red'</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
-<span id="cb13-26"><a></a>  <span class="fu">legend</span>( <span class="st">'topleft'</span>, <span class="at">bty=</span><span class="st">'n'</span>, <span class="at">col=</span><span class="fu">c</span>(<span class="st">'white'</span>,<span class="st">'black'</span>,<span class="st">'red'</span>), <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>),</span>
-<span id="cb13-27"><a></a>          <span class="at">legend=</span><span class="fu">c</span>( <span class="fu">paste0</span>(<span class="st">'P(C='</span>,j,<span class="st">') = '</span>, <span class="fu">round</span>( <span class="fu">tail</span>(Fij_I<span class="sc">$</span>mean[idx], <span class="dv">1</span>), <span class="dv">2</span>) ),</span>
-<span id="cb13-28"><a></a>                    <span class="st">'Double Exponential Quadrature'</span>, </span>
-<span id="cb13-29"><a></a>                    <span class="st">'Monte Carlo approx'</span>) )</span>
-<span id="cb13-30"><a></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-19"><a></a>idx <span class="ot">=</span> <span class="fu">str_detect</span>( Fij_I<span class="sc">$</span>variable, <span class="st">'1[:punct:]$'</span> )</span>
+<span id="cb13-20"><a></a>Fij_I_mom <span class="ot">=</span> Fij_I[idx,]</span>
+<span id="cb13-21"><a></a><span class="fu">plot</span>( t, Fij_I_mom<span class="sc">$</span>mean, <span class="at">type=</span><span class="st">'l'</span>, <span class="at">lwd=</span><span class="dv">4</span>, <span class="at">lty=</span><span class="dv">1</span>, <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.07</span>),</span>
+<span id="cb13-22"><a></a>      <span class="at">ylab =</span> <span class="st">"Cumulative incidence"</span> ,</span>
+<span id="cb13-23"><a></a>      <span class="at">xlab =</span> <span class="st">"Time"</span> )</span>
+<span id="cb13-24"><a></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(t)){</span>
+<span id="cb13-25"><a></a>  <span class="fu">lines</span>( </span>
+<span id="cb13-26"><a></a>    <span class="at">x =</span> <span class="fu">rep</span>(t[i],<span class="dv">2</span>), </span>
+<span id="cb13-27"><a></a>    <span class="at">y =</span> <span class="fu">with</span>(Fij_I_mom[i,], <span class="fu">c</span>(q5, q95) ), </span>
+<span id="cb13-28"><a></a>    <span class="at">col=</span><span class="fu">rgb</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="fl">0.1</span>) )  </span>
+<span id="cb13-29"><a></a>}</span>
+<span id="cb13-30"><a></a><span class="fu">legend</span>( <span class="st">'topleft'</span>, <span class="at">bty=</span><span class="st">'n'</span>, <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),  </span>
+<span id="cb13-31"><a></a>        <span class="at">col=</span><span class="fu">c</span>(<span class="st">'white'</span>,<span class="st">'black'</span>, <span class="fu">rgb</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="fl">0.3</span>)),</span>
+<span id="cb13-32"><a></a>        <span class="at">legend=</span><span class="fu">c</span>( <span class="fu">paste0</span>(<span class="st">'P(C='</span>,<span class="dv">1</span>,<span class="st">') = '</span>, <span class="fu">round</span>( <span class="fu">tail</span>(Fij_I<span class="sc">$</span>mean[idx], <span class="dv">1</span>), <span class="dv">2</span>) ),</span>
+<span id="cb13-33"><a></a>                  <span class="st">'Mean incidence'</span>, </span>
+<span id="cb13-34"><a></a>                  <span class="st">'90% CI'</span>) )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 
 </div>
 <img data-src="Competing-Risks-in-Liver-Transplantation_files/figure-revealjs/unnamed-chunk-9-1.png" width="960" class="r-stretch"></section>
+<section id="results-bayesian-jeong-fine-model-3" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Bayesian Jeong-Fine model</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Bayesian Jeong-Fine failures plot (Equivalence: KMG01)</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a><span class="do">### Jeong-Fine failures plot ####</span></span>
+<span id="cb14-2"><a></a><span class="co"># (Equivalence: KMG01)</span></span>
+<span id="cb14-3"><a></a></span>
+<span id="cb14-4"><a></a><span class="co"># load ADR?</span></span>
+<span id="cb14-5"><a></a>Fij_MC <span class="ot">=</span> <span class="fu">readRDS</span>( </span>
+<span id="cb14-6"><a></a>  <span class="fu">file.path</span>( </span>
+<span id="cb14-7"><a></a>    <span class="fu">here</span>(),</span>
+<span id="cb14-8"><a></a>    <span class="st">'results'</span>,</span>
+<span id="cb14-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_JF_cumincMC.RDS'</span> ) ) )</span>
+<span id="cb14-10"><a></a></span>
+<span id="cb14-11"><a></a>Fij_I <span class="ot">=</span> <span class="fu">readRDS</span>( </span>
+<span id="cb14-12"><a></a>  <span class="fu">file.path</span>( </span>
+<span id="cb14-13"><a></a>    <span class="fu">here</span>(),</span>
+<span id="cb14-14"><a></a>    <span class="st">'results'</span>,</span>
+<span id="cb14-15"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_JF_cumincI.RDS'</span>) ) )</span>
+<span id="cb14-16"><a></a></span>
+<span id="cb14-17"><a></a>t <span class="ot">=</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">max</span>(ds<span class="sc">$</span>time), <span class="at">by=</span><span class="dv">3</span>)</span>
+<span id="cb14-18"><a></a></span>
+<span id="cb14-19"><a></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb14-20"><a></a><span class="cf">for</span>( j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span> ){</span>
+<span id="cb14-21"><a></a>  idx <span class="ot">=</span> <span class="fu">str_detect</span>( Fij_MC<span class="sc">$</span>variable, <span class="fu">paste0</span>(j,<span class="st">'[:punct:]$'</span>) )</span>
+<span id="cb14-22"><a></a>  <span class="fu">plot</span>( t, Fij_I<span class="sc">$</span>mean[idx], <span class="at">type=</span><span class="st">'l'</span>, <span class="at">lwd=</span><span class="dv">4</span>, <span class="at">lty=</span><span class="dv">1</span>, <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.15</span>),</span>
+<span id="cb14-23"><a></a>        <span class="at">ylab =</span> <span class="st">"Cumulative incidence"</span> ,</span>
+<span id="cb14-24"><a></a>        <span class="at">xlab =</span> <span class="st">"Time"</span> )</span>
+<span id="cb14-25"><a></a>  <span class="fu">lines</span>( t, Fij_MC<span class="sc">$</span>mean[idx], <span class="at">col=</span><span class="st">'red'</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb14-26"><a></a>  <span class="fu">legend</span>( <span class="st">'topleft'</span>, <span class="at">bty=</span><span class="st">'n'</span>, <span class="at">col=</span><span class="fu">c</span>(<span class="st">'white'</span>,<span class="st">'black'</span>,<span class="st">'red'</span>), <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>),</span>
+<span id="cb14-27"><a></a>          <span class="at">legend=</span><span class="fu">c</span>( <span class="fu">paste0</span>(<span class="st">'P(C='</span>,j,<span class="st">') = '</span>, <span class="fu">round</span>( <span class="fu">tail</span>(Fij_I<span class="sc">$</span>mean[idx], <span class="dv">1</span>), <span class="dv">2</span>) ),</span>
+<span id="cb14-28"><a></a>                    <span class="st">'Double Exponential Quadrature'</span>, </span>
+<span id="cb14-29"><a></a>                    <span class="st">'Monte Carlo approx'</span>) )</span>
+<span id="cb14-30"><a></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+
+</div>
+<img data-src="Competing-Risks-in-Liver-Transplantation_files/figure-revealjs/unnamed-chunk-10-1.png" width="960" class="r-stretch"></section>
 <section id="validation-and-regulatory-aligment" class="slide level2" style="font-size:60%;">
 <h2>8. Validation and regulatory aligment</h2>
 <p>Per the <strong>FDA Draft Guidance on Bayesian Methodology</strong> <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">14</a>]</span>, utilizing the Jeong-Fine model <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> requires the creation of two core documents:</p>
