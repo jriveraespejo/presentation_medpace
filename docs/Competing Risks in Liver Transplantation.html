@@ -11,7 +11,7 @@
   <meta name="generator" content="quarto-1.4.550">
 
   <meta name="author" content="Jose Manuel Rivera Espejo">
-  <meta name="dcterms.date" content="2026-02-24">
+  <meta name="dcterms.date" content="2026-02-26">
   <title>Competing Risks in Liver Transplantation</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -420,7 +420,7 @@
 
 <section id="title-slide" class="quarto-title-block center">
   <h1 class="title">Competing Risks in Liver Transplantation</h1>
-  <p class="subtitle">A Bayesian implementation of the Jeong-Fine model</p>
+  <p class="subtitle">A Bayesian parametric alternative, the Jeong-Fine model</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -430,26 +430,26 @@ Jose Manuel Rivera Espejo
 </div>
 </div>
 
-  <p class="date">24 February 2026</p>
+  <p class="date">26 February 2026</p>
 </section>
-<section id="the-contents" class="slide level2" style="font-size:64%;">
+<section id="the-contents" class="slide level2" style="font-size:60%;">
 <h2>The contents</h2>
 <ol type="1">
 <li>Motivating example</li>
 <li>Clinical conflict</li>
 <li>Handling competing risks</li>
-<li>Methodological Split</li>
-<li>Software implementation</li>
-<li>Technical depth</li>
-<li>Validation and regulatory aligment</li>
+<li>Model definition</li>
+<li>Software landscape</li>
+<li>Bayesian implementation</li>
 <li>Results</li>
-<li>CDISC standards and traceability</li>
+<li>Validation and regulatory aligment</li>
+<li>CDISC workflow and traceability</li>
 <li>Business value for Medpace</li>
 </ol>
 </section>
-<section id="motivating-example" class="slide level2" style="font-size:64%;">
+<section id="motivating-example" class="slide level2" style="font-size:60%;">
 <h2>1. Motivating example</h2>
-<p>Consistent with the <strong>Estimands framework</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, a liver transplant study modified from Collett <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span> can be defined as:</p>
+<p>Consistent with the <strong>Estimands framework</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, a liver transplant case study should define at least the following attributes:</p>
 <div>
 <ol type="1">
 <li class="fragment"><strong>Population:</strong> adult elective transplant recipients from a deceased donor.</li>
@@ -482,6 +482,7 @@ Jose Manuel Rivera Espejo
 </ol>
 </div>
 <aside class="notes">
+<p><strong>Note:</strong> example is based on a case study from Collett <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>, but the specific data are illustrative and not identical to the original source.</p>
 <p><strong>primary liver diseases</strong> include - primary biliary cirrhosis (PBC) - primary sclerosing cholangitis (PSC) and - alcoholic liver disease (ALD)</p>
 <p><strong>summary measure</strong> is purposely not precise enough to make a point.</p>
 <p><strong>additional considerations:</strong> Given the success of liver transplantation, data presents <u>heavy censoring</u>, with only <span class="math inline">\(15\%\)</span> (<span class="math inline">\(n=260\)</span>) of individuals experienced graft failure from any cause, and <span class="math inline">\(1.6\%\)</span> (<span class="math inline">\(n=29\)</span>) specifically from OR.</p>
@@ -497,26 +498,25 @@ Jose Manuel Rivera Espejo
           display:block!important;
       }</style></aside>
 </section>
-<section id="clinical-conflict" class="slide level2" style="font-size:64%;">
+<section id="clinical-conflict" class="slide level2" style="font-size:60%;">
 <h2>2. Clinical conflict</h2>
+<p>Different graft failures (competing risks) can preclude the occurrence of failure from OR (primary endpoint), effectively affecting its existence or interpretation <span class="citation" data-cites="ICH_E9_R1_2019 Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">1</a>, <a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p>
 <div>
 <ul>
-<li class="fragment"><p><strong>Reality:</strong></p>
-<p>Competing risks preclude the occurrence of the primary endpoint <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>, effectively affecting its existence or interpretation <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>.</p></li>
 <li class="fragment"><p><strong>Naive estimator:</strong></p>
-<p>can we simply treat them as censored? Approach taken by the standard Kaplan-Meier (1-KM) model.</p></li>
+<p>Can we simply treat competing risks as censored? That is the approach of the naive Kaplan-Meier (KM) estimator</p></li>
 <li class="fragment"><p><strong>Estimation problem:</strong></p>
-<p>“Censoring” competing risks causes the 1-KM model to overestimate the cumulative incidence of the event of interest <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p></li>
+<p>“Censoring” competing risks causes the naive KM estimator to overestimate the cumulative incidence of the event of interest <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p></li>
 <li class="fragment"><p><strong>Estimand definition:</strong></p>
 <p>“The 1-KM estimate is the probability of (failing) beyond time <span class="math inline">\(t\)</span>, if cause <span class="math inline">\(j\)</span> is the only cause of (failure), that is if all other risks were removed.” <span class="citation" data-cites="Collett_2023 Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">2</a>, <a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
-<li class="fragment"><p><strong>Question:</strong></p>
-<p>How to ensure an unbiased, efficient estimate of the summary measure?</p></li>
 </ul>
+</div>
+<div class="fragment">
+<p><strong>Question:</strong> How to ensure an unbiased, efficient estimate of the summary measure?</p>
 </div>
 <aside class="notes">
 <ul>
-<li><p><strong>Reality:</strong> Different graft failures <u>compete</u> to be the observed time-to-event endpoint.</p></li>
-<li><p><strong>Estimand definition:</strong> “the analysis is effectively an attempt to simulate a population in which (failure) from other causes is somehow either abolished or rendered independent of the risk factors for (the event of interest). The resulting effect estimate is hard to interpret and may not correspond to a meaningful estimand” <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
+<li><strong>Estimand definition:</strong> “the analysis is effectively an attempt to simulate a population in which (failure) from other causes is somehow either abolished or rendered independent of the risk factors for (the event of interest). The resulting effect estimate is hard to interpret and may not correspond to a meaningful estimand” <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></li>
 </ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -530,26 +530,29 @@ Jose Manuel Rivera Espejo
           display:block!important;
       }</style></aside>
 </section>
-<section id="handling-competing-risks" class="slide level2" style="font-size:64%;">
+<section id="handling-competing-risks" class="slide level2" style="font-size:60%;">
 <h2>3. Handling competing risks</h2>
-<p>Consistent with the <strong>strategies for addressing intercurrent events</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, an alternative to the <strong>hypothetical strategy</strong> (targeted by 1-KM estimator) is to:</p>
+<p>Consistent with the <strong>strategies for addressing intercurrent events</strong> <span class="citation" data-cites="ICH_E9_R1_2019">[<a href="#/references" role="doc-biblioref" onclick="">1</a>]</span>, alternatives to the <strong>hypothetical strategy</strong> (targeted by naive KM estimator) include:</p>
 <div>
 <ul>
 <li class="fragment"><p><strong>Create a single composite event</strong>,</p>
-<p>e.g., any cause of graft failure is considered an event. This changes the question/estimand <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
+<p>e.g., any cause of graft failure is considered an event.</p></li>
 <li class="fragment"><p><strong>Restricting inference to the principal stratum</strong>,</p>
-<p>e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment. This needs a “challenging” counterfactual <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
+<p>e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment.</p></li>
 <li class="fragment"><p><strong>Apply the treatment policy strategy</strong>.</p>
-<p>In this case it may lead to clinically nonsensical scenarios, e.g., consider the “re-transplant” problem.</p></li>
-<li class="fragment"><p><strong>Follow a while-on-treatment strategy</strong>,</p>
-<p>e.g., consider the “re-transplant” problem again. <span class="fragment">This is what the Fine-Gray <span class="citation" data-cites="Fine_et_al_1999">[F&amp;G, <a href="#/references" role="doc-biblioref" onclick="">4</a>]</span> and Jeong-Fine <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[J&amp;F, <a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> estimators attempt to model.</span></p></li>
+<p>e.g., follow patients and record failure from OR regardless of competing risks (the “re-transplant” problem).</p></li>
+<li class="fragment"><p><strong>Follow a while-alive strategy</strong>,</p>
+<p>e.g., assess failure from OR while the patient has not yet experienced a competing risk.</p></li>
 </ul>
+</div>
+<div class="fragment">
+<p>The Fine-Gray <span class="citation" data-cites="Fine_et_al_1999">[<a href="#/references" role="doc-biblioref" onclick="">4</a>]</span> and Jeong-Fine <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> estimators target the <strong>while-alive strategy</strong>, modeling the cumulative incidence while subjects remain “at risk” for the primary event.</p>
 </div>
 <aside class="notes">
 <ul>
-<li><p><strong>Create a single composite event</strong>, eliminates the competing events, but fundamentally changes the causal question (estimand) <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
-<li><p><strong>Restricting inference to the principal stratum</strong>, This approach targets a specific subpopulation effect (e.g., the local average effect or LATE), which makes both interpretation and valid estimation especially challenging <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
-<li><p><strong>Apply the treatment policy strategy</strong>. e.g., the “re-transplant” problem: if a patient receives a second transplant due to early HAT, and the second liver is rejected due to OR, the strategy could attribute this rejection to the first liver’s treatment, because the strategy requires that you follow the patient until you see the event of interest.</p></li>
+<li><p><strong>Create a single composite event</strong>, eliminates competing events, but changes the causal question/estimand <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span></p></li>
+<li><p><strong>Restricting inference to the principal stratum</strong>, targets a specific subpopulation effect (e.g., LATE), which requires to “build” a challenging counterfactual, affecting interpretation and valid estimation <span class="citation" data-cites="Hernan_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">3</a>]</span>.</p></li>
+<li><p><strong>Apply the treatment policy strategy</strong>. e.g., the “re-transplant” problem: if a patient receives a second transplant due to early HAT, and the second liver is rejected due to OR, the strategy could attribute this rejection to the first liver’s treatment, because the strategy requires that you follow the patient until you see the event of interest (This is clinically nonsensical).</p></li>
 <li><p><strong>Follow a while-on-treatment strategy</strong>, e.g., in the “re-transplant” problem, if a patient receives a second transplant due to early HAT, the strategy would evaluate the risk of graft failure due to OR only while the patient still has their first graft, “stopping the clock” at the moment of re-transplant.</p></li>
 </ul>
 <style type="text/css">
@@ -564,35 +567,36 @@ Jose Manuel Rivera Espejo
           display:block!important;
       }</style></aside>
 </section>
-<section id="methodological-split-the-fg-model" class="slide level2" style="font-size:64%;">
-<h2>4. Methodological Split: The F&amp;G model</h2>
+<section id="model-definition-the-fine-gray-model" class="slide level2" style="font-size:60%;">
+<h2>4. Model definition: The Fine-Gray model</h2>
 <div class="fragment">
-<p>The F&amp;G model <span class="citation" data-cites="Fine_et_al_1999">[<a href="#/references" role="doc-biblioref" onclick="">4</a>]</span> defines “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, given that an individual has not previously died from cause <span class="math inline">\(j\)</span>” as</p>
+<p>The cause-specific subdistribution hazard function is defined as,</p>
 <p><span id="eq-FandG_p"><span class="math display">\[
 h_{j}(t) = \lim_{\delta t \rightarrow 0} \left[ \frac{P(t \leq T \leq t+\delta t, C=j) | \{ T \geq t \} \; \text{or} \; \{ T \leq t \; and \; C \neq j\}}{ \delta t } \right]
 \qquad(1)\]</span></span></p>
 </div>
 <div class="fragment">
-<p>where a <u>Proportional Hazard Cox model</u> is assumed for the <strong>subdistribution hazard function of cause <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span> for individual <span class="math inline">\(i\)</span></strong>,</p>
+<p>To incorporate the influence of covariates, we assume a proportional subdistribution hazards model,</p>
 <p><span id="eq-FandG_hij"><span class="math display">\[
-h_{ij}(t) = exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) h_{0j}(t)
+h_{ij}(t,\boldsymbol{\beta}) = exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) \; h_{0j}(t)
 \qquad(2)\]</span></span></p>
 </div>
 <div class="fragment">
-<p>which results in a partial likelihood function for all <span class="math inline">\(m\)</span> causes as,</p>
+<p>Leaving the baseline hazard <span class="math inline">\(h_{0j}(t)\)</span> <strong>unspecified</strong>, the parameters are estimated by maximizing the partial likelihood function for <span class="math inline">\(m\)</span> causes:</p>
 <p><span id="eq-FandG_L"><span class="math display">\[
-L(\boldsymbol{\beta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} \frac{ exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) }{ \sum_{l \in R(t_{(h)})} w_{hl} exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} ) }
+L(\boldsymbol{\beta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} \frac{ exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) }{ \sum_{l \in R(t_{(h)})} w_{hl} \; exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} ) }
 \qquad(3)\]</span></span></p>
 </div>
 <div class="fragment">
-<p>The model is best interpreted in terms of the effects of explanatory variables on the <strong>cause-specific cumulative incidence function of the <span class="math inline">\(j\)</span>th cause</strong>,</p>
+<p>The model is best interpreted in terms of the effects of explanatory variables on the cause-specific cumulative incidence function,</p>
 <p><span id="eq-FandG_Hij"><span class="math display">\[
-F_{ij}(t) = 1 - exp \left[ -exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) H_{0j}(t) \right]
+F_{ij}(t,\boldsymbol{\beta}) = 1 - exp \left[ -exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) H_{0j}(t) \right]
 \qquad(4)\]</span></span></p>
 <p>where the baseline cumulative subdistribution hazard function, <span class="math inline">\(H_{0j}(t)\)</span>, is estimated using the Nelson-Aalen estimate <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span>.</p>
 </div>
 <aside class="notes">
-<p>The F&amp;G model <span class="citation" data-cites="Fine_et_al_1999">[<a href="#/references" role="doc-biblioref" onclick="">4</a>]</span> is the <u>industry standard</u>, but it utilizes a <strong>risk set that is not straightforward to interpret</strong>: it continues to include subjects who have experienced a competing event as if they were still at risk for other competing events.</p>
+<p><span class="math inline">\(h_{j}(t)\)</span> is “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, given that an individual has not previously died from cause <span class="math inline">\(j\)</span>” <span class="citation" data-cites="Collett_2023">[<a href="#/references" role="doc-biblioref" onclick="">2</a>]</span></p>
+<p>The F&amp;G model is the <u>industry standard</u>, but it utilizes a <strong>risk set that is not straightforward to interpret</strong>: it continues to include subjects who have experienced a competing event as if they were still at risk for other competing events.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -605,27 +609,37 @@ F_{ij}(t) = 1 - exp \left[ -exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) H_
           display:block!important;
       }</style></aside>
 </section>
-<section id="methodological-split-the-jf-model" class="slide level2" style="font-size:64%;">
-<h2>4. Methodological Split: The J&amp;F model</h2>
+<section id="model-definition-the-jeong-fine-model" class="slide level2" style="font-size:60%;">
+<h2>4. Model definition: The Jeong-Fine model</h2>
 <div class="fragment">
-<p>In contrast, the J&amp;F model <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> has a simpler definition for “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, in the presence of all other risks”</p>
+<p>The cause-specific subdistribution hazard function is defined as,</p>
 <p><span id="eq-JandF_p"><span class="math display">\[
 h_{j}(t) = \lim_{\delta t \rightarrow 0} \left[ \frac{P(t \leq T \leq t+\delta t, C=j) | T \geq t }{ \delta t } \right]
 \qquad(5)\]</span></span></p>
 </div>
 <div class="fragment">
-<p>but a <u>Parametric Model</u> is assumed for the <strong>subdistribution hazard function of cause <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span> for individual <span class="math inline">\(i\)</span></strong>, <span class="math inline">\(h_{ij}(t, \boldsymbol{\theta})\)</span>, resulting in a likelihood function for all <span class="math inline">\(m\)</span> causes as,</p>
-<p><span id="eq-JandF_L"><span class="math display">\[
-L(\boldsymbol{\beta},\boldsymbol{\theta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} h_{ij}(t, \boldsymbol{\theta})^{\delta_{ij}} \; exp[ -H_{ij}(t, \boldsymbol{\theta}) ]
+<p>To incorporate the influence of covariates, we also assume a proportional subdistribution hazards model. Unlike Fine-Gray, we assume a <strong>parametric form</strong> for baseline hazard (e.g., Weibull):</p>
+<p><span id="eq-JandF_hij"><span class="math display">\[
+\begin{aligned}
+h_{ij}(t, \boldsymbol{\beta}, \boldsymbol{\theta}) &amp;= exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) \; h_{0j}(t, \boldsymbol{\theta}) \\
+&amp;= exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) \; \lambda \gamma t^{\gamma-1}
+\end{aligned}
 \qquad(6)\]</span></span></p>
 </div>
 <div class="fragment">
-<p>Similarly, the model is interpreted in terms of the effects of explanatory variables on the <strong>cause-specific cumulative incidence function of the <span class="math inline">\(j\)</span>th cause</strong>,</p>
-<p><span id="eq-FandG_Hij"><span class="math display">\[
-F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
+<p>The parameters are estimated by maximizing the full likelihood function for <span class="math inline">\(m\)</span> causes,</p>
+<p><span id="eq-JandF_L"><span class="math display">\[
+L(\boldsymbol{\beta},\boldsymbol{\theta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} h_{ij}(t,\boldsymbol{\beta}, \boldsymbol{\theta})^{\delta_{ij}} \; exp[ -H_{ij}(t,\boldsymbol{\beta}, \boldsymbol{\theta}) ]
 \qquad(7)\]</span></span></p>
 </div>
+<div class="fragment">
+<p>Similarly, the model is best interpreted in terms of the effects of covariates on the cause-specific cumulative incidence function,</p>
+<p><span id="eq-FandG_Hij"><span class="math display">\[
+F_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) = \int_{0}^{t} f_{ij}(u,\boldsymbol{\beta},\boldsymbol{\theta}) \; du = \int_{0}^{t} h_{ij}(u,\boldsymbol{\beta},\boldsymbol{\theta}) \; S(u,\boldsymbol{\beta},\boldsymbol{\theta}) \; du
+\qquad(8)\]</span></span></p>
+</div>
 <aside class="notes">
+<p><span class="math inline">\(h_{j}(t)\)</span> is “the instantaneous event rate at time <span class="math inline">\(t\)</span> from cause <span class="math inline">\(j\)</span>, given that an individual has not experineces any event at time <span class="math inline">\(t\)</span>” <span class="citation" data-cites="Collett_2023 Jeong_et_al_2006">[<a href="#/references" role="doc-biblioref" onclick="">2</a>, <a href="#/references" role="doc-biblioref" onclick="">5</a>]</span></p>
 <p><strong>Benefit:</strong> interpretable risk set.</p>
 <p><strong>Drawback:</strong> <span class="math inline">\(F_{ij}(t)\)</span> usually requires numerical integration</p>
 <style type="text/css">
@@ -640,17 +654,17 @@ F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
           display:block!important;
       }</style></aside>
 </section>
-<section id="software-implementation" class="slide level2" style="font-size:64%;">
-<h2>5. Software implementation</h2>
+<section id="software-landscape" class="slide level2" style="font-size:60%;">
+<h2>5. Software landscape</h2>
 <p>The following tools are available for model estimation:</p>
 <div>
 <ul>
-<li class="fragment"><p>The frequentist estimation of the F&amp;G model <span class="citation" data-cites="Fine_et_al_1999">[<a href="#/references" role="doc-biblioref" onclick="">4</a>]</span>, is accessible via the <code>cmprsk</code> package <span class="citation" data-cites="Gray_2024">[<a href="#/references" role="doc-biblioref" onclick="">7</a>]</span> or <code>finegray</code> function within the <code>survival</code> package <span class="citation" data-cites="Therneau_et_al_2000 Therneau_2026">[<a href="#/references" role="doc-biblioref" onclick="">8</a>, <a href="#/references" role="doc-biblioref" onclick="">9</a>]</span>.</p></li>
-<li class="fragment"><p>… but the J&amp;F model <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> lacks a dedicated “out-of-the-box” frequentist package.</p></li>
+<li class="fragment"><strong>Fine-Gray:</strong> well-supported frequentist implementation via the <code>cmprsk</code> package <span class="citation" data-cites="Gray_2024">[<a href="#/references" role="doc-biblioref" onclick="">7</a>]</span>. The <code>survival</code> package <span class="citation" data-cites="Therneau_et_al_2000 Therneau_2026">[<a href="#/references" role="doc-biblioref" onclick="">8</a>, <a href="#/references" role="doc-biblioref" onclick="">9</a>]</span> also provides the <code>finegray</code> function.</li>
+<li class="fragment"><strong>Jeong-Fine:</strong> Lacks a long-standing, stable frequentist implementation; however, the <code>cmpp</code> package <span class="citation" data-cites="Ezzatabadipour_2025">[<a href="#/references" role="doc-biblioref" onclick="">10</a>]</span> (currently in development phase) provides an option.</li>
 </ul>
 </div>
 <div class="fragment">
-<p>However, <strong>Bayesian</strong> versions of both models can be implemented via <code>Stan</code> <span class="citation" data-cites="Stan_2026a Stan_2026b">[<a href="#/references" role="doc-biblioref" onclick="">10</a>, <a href="#/references" role="doc-biblioref" onclick="">11</a>]</span> using the <code>cmdstanr</code> interface package <span class="citation" data-cites="Gabry_et_al_2025b">[<a href="#/references" role="doc-biblioref" onclick="">12</a>]</span>.</p>
+<p>Nevertheless, by leveraging <code>Stan</code> <span class="citation" data-cites="Stan_2026a Stan_2026b">[<a href="#/references" role="doc-biblioref" onclick="">11</a>, <a href="#/references" role="doc-biblioref" onclick="">12</a>]</span> via the <code>cmdstanr</code> package <span class="citation" data-cites="Gabry_et_al_2025b">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span>, we can implement both models within a <strong>Bayesian</strong> framework.</p>
 </div>
 <div class="fragment">
 <p>Benefits:</p>
@@ -677,13 +691,8 @@ F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
 </div>
 </div>
 <aside class="notes">
-<p>Benefits:</p>
-<ul>
-<li>Allows the definition of <u>custom likelihoods</u> not natively available in standard packages.</li>
-<li>Provides a posterior distribution that propagates all parameter <u>uncertainty</u>.</li>
-<li><u>Does not rely on asymptotic theory</u>, making it more robust in small-sample scenarios.</li>
-<li>The <u>Bayesian J&amp;F model</u> yields the full posterior distribution for the cumulative incidence function, <span class="math inline">\(F_{ij}(t)\)</span>.</li>
-</ul>
+<p>Robust and flexible alternative to the missing frequentist implementation</p>
+<p>Benefits: - Allows the definition of <u>custom likelihoods</u> not natively available in standard packages. - Provides a posterior distribution that propagates all parameter <u>uncertainty</u>. - <u>Does not rely on asymptotic theory</u>, making it more robust in small-sample scenarios. - The <u>Bayesian J&amp;F model</u> yields the full posterior distribution for the cumulative incidence function, <span class="math inline">\(F_{ij}(t)\)</span>.</p>
 <p>Drawbacks:</p>
 <ul>
 <li>Frequentist analysis requires optimization knowledge.<br>
@@ -701,12 +710,12 @@ F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
           display:block!important;
       }</style></aside>
 </section>
-<section id="technical-depth-the-fg-model-cox-partial-likelihood" class="slide level2" style="font-size:64%;">
-<h2>6. Technical depth: The F&amp;G model, Cox partial likelihood</h2>
-<p>The log-likelihood for <a href="#/methodological-split-the-fg-model" class="quarto-xref">Equation&nbsp;3</a> is,</p>
+<section id="bayesian-implementation-the-fine-gray-model" class="slide level2" style="font-size:60%;">
+<h2>6. Bayesian implementation: The Fine-Gray model</h2>
+<p>The partial log-likelihood for <a href="#/model-definition-the-fine-gray-model" class="quarto-xref">Equation&nbsp;3</a> is,</p>
 <p><span id="eq-FandG_logL"><span class="math display">\[
 \log L(\boldsymbol{\beta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} \; \cdot \log \left\{ \sum_{l \in R(t_{(h)})} exp \left[ \log(w_{hl}) + \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} \right] \right\}
-\qquad(8)\]</span></span></p>
+\qquad(9)\]</span></span></p>
 <p>Sorting data in descending order by event times, the Bayesian model is as follows:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a></a><span class="in">```{r}</span></span>
 <span id="cb1-2"><a></a><span class="in">StanModel = "</span></span>
@@ -716,7 +725,7 @@ F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
 <span id="cb1-6"><a></a><span class="in">  int&lt;lower=0&gt; q; // num covariates</span></span>
 <span id="cb1-7"><a></a><span class="in">  vector[n] t;    // time</span></span>
 <span id="cb1-8"><a></a><span class="in">  matrix[n,m] s;  // cause of failure</span></span>
-<span id="cb1-9"><a></a><span class="in">  matrix[n,q] x;  // covariates</span></span>
+<span id="cb1-9"><a></a><span class="in">  matrix[n,q] X;  // covariates</span></span>
 <span id="cb1-10"><a></a><span class="in">  vector[n] w;    // weights</span></span>
 <span id="cb1-11"><a></a><span class="in">}</span></span>
 <span id="cb1-12"><a></a><span class="in">parameters {</span></span>
@@ -724,138 +733,2215 @@ F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
 <span id="cb1-14"><a></a><span class="in">}</span></span>
 <span id="cb1-15"><a></a><span class="in">model {</span></span>
 <span id="cb1-16"><a></a><span class="in">  // priors</span></span>
-<span id="cb1-17"><a></a><span class="in">  to_vector(beta) ~ normal(0, 2);</span></span>
+<span id="cb1-17"><a></a><span class="in">  to_vector(beta) ~ normal(0,2);</span></span>
 <span id="cb1-18"><a></a><span class="in">  </span></span>
 <span id="cb1-19"><a></a><span class="in">  // risk score</span></span>
-<span id="cb1-20"><a></a><span class="in">  matrix[n,m] rs = x*beta;</span></span>
+<span id="cb1-20"><a></a><span class="in">  matrix[n,m] rs = X*beta;</span></span>
 <span id="cb1-21"><a></a><span class="in">  </span></span>
-<span id="cb1-22"><a></a><span class="in">  for( j in 1:m ){</span></span>
-<span id="cb1-23"><a></a><span class="in">    for( i in 1:n ) {</span></span>
-<span id="cb1-24"><a></a><span class="in">      if( s[i,j]==1 ){</span></span>
-<span id="cb1-25"><a></a><span class="in">        real log_den = log_sum_exp( log(w[1:i]) + rs[1:i, j] );</span></span>
-<span id="cb1-26"><a></a><span class="in">        target += rs[i,j] - log_den;</span></span>
-<span id="cb1-27"><a></a><span class="in">      }</span></span>
-<span id="cb1-28"><a></a><span class="in">    }</span></span>
-<span id="cb1-29"><a></a><span class="in">  }</span></span>
-<span id="cb1-30"><a></a><span class="in">}</span></span>
-<span id="cb1-31"><a></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-22"><a></a><span class="in">  // partial log-likelihood</span></span>
+<span id="cb1-23"><a></a><span class="in">  for( j in 1:m ){</span></span>
+<span id="cb1-24"><a></a><span class="in">    for( i in 1:n ) {</span></span>
+<span id="cb1-25"><a></a><span class="in">      if( s[i,j]==1 ){</span></span>
+<span id="cb1-26"><a></a><span class="in">        real log_den = log_sum_exp( log(w[1:i]) + rs[1:i, j] );</span></span>
+<span id="cb1-27"><a></a><span class="in">        target += rs[i,j] - log_den;</span></span>
+<span id="cb1-28"><a></a><span class="in">      }</span></span>
+<span id="cb1-29"><a></a><span class="in">    }</span></span>
+<span id="cb1-30"><a></a><span class="in">  }</span></span>
+<span id="cb1-31"><a></a><span class="in">}</span></span>
+<span id="cb1-32"><a></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="technical-depth-the-jf-model-weibull-baseline-hazard" class="slide level2" style="font-size:64%;">
-<h2>6. Technical depth: the J&amp;F model, Weibull baseline hazard</h2>
-<p>The log-likelihood for <a href="#/methodological-split-the-jf-model" class="quarto-xref">Equation&nbsp;6</a> is,</p>
+<section id="bayesian-implementation-the-jeong-fine-model" class="slide level2" style="font-size:60%;">
+<h2>6. Bayesian implementation: The Jeong-Fine model</h2>
+<p>The full log-likelihood for <a href="#/model-definition-the-jeong-fine-model" class="quarto-xref">Equation&nbsp;7</a> is,</p>
 <p><span id="eq-JandF_logL"><span class="math display">\[
-log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \delta_{ij} \cdot log \; h_{ij}(t,\boldsymbol{\theta}) - H_{ij}(t,\boldsymbol{\theta})
-\qquad(9)\]</span></span></p>
+\log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \delta_{ij} \cdot \log h_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) - H_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta})
+\qquad(10)\]</span></span></p>
 <p>and the Bayesian model is defined as:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a></a><span class="in">```{r}</span></span>
 <span id="cb2-2"><a></a><span class="in">StanModel = "</span></span>
 <span id="cb2-3"><a></a><span class="in">functions{</span></span>
-<span id="cb2-4"><a></a><span class="in">  // Based on Jeong et al (2006) Equations (9), (10), and (13)</span></span>
-<span id="cb2-5"><a></a><span class="in">  // cause-specific log hazard function</span></span>
-<span id="cb2-6"><a></a><span class="in">  real log_hij( real t, real rs, real lambda, real gamma ){</span></span>
-<span id="cb2-7"><a></a><span class="in">    return( rs + log(lambda) + log(gamma) + (gamma-1)*log(t) );</span></span>
-<span id="cb2-8"><a></a><span class="in">  }</span></span>
-<span id="cb2-9"><a></a><span class="in">  // cause-specific cummulative hazard function</span></span>
-<span id="cb2-10"><a></a><span class="in">  real Hij( real t, real rs, real lambda, real gamma ){</span></span>
-<span id="cb2-11"><a></a><span class="in">    return( exp( rs ) * lambda * t^gamma ); </span></span>
-<span id="cb2-12"><a></a><span class="in">  }</span></span>
-<span id="cb2-13"><a></a><span class="in">  // overall log-survival function</span></span>
-<span id="cb2-14"><a></a><span class="in">  real log_S( real t, vector rs, vector lambda, vector gamma, int m ) {</span></span>
-<span id="cb2-15"><a></a><span class="in">    real oSt = 0;</span></span>
-<span id="cb2-16"><a></a><span class="in">    for (j in 1:m) {</span></span>
-<span id="cb2-17"><a></a><span class="in">      oSt += Hij(t, rs[j], lambda[j], gamma[j]);</span></span>
-<span id="cb2-18"><a></a><span class="in">    }</span></span>
-<span id="cb2-19"><a></a><span class="in">    return(-oSt);</span></span>
-<span id="cb2-20"><a></a><span class="in">  }</span></span>
-<span id="cb2-21"><a></a><span class="in">  // cause specific log-density</span></span>
-<span id="cb2-22"><a></a><span class="in">  real log_fij( real t, int j, vector rs, vector lambda, vector gamma, int m ){</span></span>
-<span id="cb2-23"><a></a><span class="in">    return ( log_hij( t, rs[j], lambda[j], gamma[j] ) + </span></span>
-<span id="cb2-24"><a></a><span class="in">             log_S( t, rs, lambda, gamma, m ) );</span></span>
-<span id="cb2-25"><a></a><span class="in">  }</span></span>
-<span id="cb2-26"><a></a><span class="in">  // Integrand for the density function</span></span>
-<span id="cb2-27"><a></a><span class="in">  real fij(real t, real xc, array[] real theta, array[] real x_r, array[] int x_i) {</span></span>
-<span id="cb2-28"><a></a><span class="in">    // parameters and data</span></span>
-<span id="cb2-29"><a></a><span class="in">    int j = x_i[1];</span></span>
-<span id="cb2-30"><a></a><span class="in">    int m = x_i[2];</span></span>
-<span id="cb2-31"><a></a><span class="in">    vector[m] rs = to_vector( theta[1:m] );</span></span>
-<span id="cb2-32"><a></a><span class="in">    vector[m] lambda = to_vector( theta[(m+1):(2*m)] );</span></span>
-<span id="cb2-33"><a></a><span class="in">    vector[m] gamma =  to_vector( theta[(2*m+1):(3*m)] );</span></span>
-<span id="cb2-34"><a></a><span class="in">    return( exp( log_fij( t, j, rs, lambda, gamma, m ) ) );</span></span>
-<span id="cb2-35"><a></a><span class="in">  }</span></span>
-<span id="cb2-36"><a></a><span class="in">}</span></span>
-<span id="cb2-37"><a></a><span class="in">data {</span></span>
-<span id="cb2-38"><a></a><span class="in">  // fitting data</span></span>
-<span id="cb2-39"><a></a><span class="in">  int&lt;lower=0&gt; m;       // number of causes</span></span>
-<span id="cb2-40"><a></a><span class="in">  int&lt;lower=0&gt; n;       // num obs</span></span>
-<span id="cb2-41"><a></a><span class="in">  int&lt;lower=0&gt; q;       // num covariates</span></span>
-<span id="cb2-42"><a></a><span class="in">  vector[n] t;          // time</span></span>
-<span id="cb2-43"><a></a><span class="in">  matrix[n,m] s;        // cause of failure</span></span>
-<span id="cb2-44"><a></a><span class="in">  matrix[n,q] X;        // covariates</span></span>
-<span id="cb2-45"><a></a><span class="in">  </span></span>
-<span id="cb2-46"><a></a><span class="in">  // For Marginal Approximation</span></span>
-<span id="cb2-47"><a></a><span class="in">  int&lt;lower=1&gt; ms;      // Number of Monte Carlo draws (e.g., 100)</span></span>
-<span id="cb2-48"><a></a><span class="in">  int&lt;lower=0&gt; ns;      // number of time samples</span></span>
-<span id="cb2-49"><a></a><span class="in">  vector[ns] ts;        // time samples</span></span>
-<span id="cb2-50"><a></a><span class="in">  matrix[1,q] xs;       // covariates for simulation</span></span>
-<span id="cb2-51"><a></a><span class="in">}</span></span>
-<span id="cb2-52"><a></a><span class="in">parameters {</span></span>
-<span id="cb2-53"><a></a><span class="in">  matrix[q,m] beta;           // beta[covariate,cause]</span></span>
-<span id="cb2-54"><a></a><span class="in">  vector&lt;lower=0&gt;[m] lambda;  // lambda[cause]</span></span>
-<span id="cb2-55"><a></a><span class="in">  vector&lt;lower=0&gt;[m] gamma;   // gamma[cause]</span></span>
-<span id="cb2-56"><a></a><span class="in">}</span></span>
-<span id="cb2-57"><a></a><span class="in">model {</span></span>
-<span id="cb2-58"><a></a><span class="in">  // priors</span></span>
-<span id="cb2-59"><a></a><span class="in">  to_vector(beta) ~ normal(0,2);</span></span>
-<span id="cb2-60"><a></a><span class="in">  lambda ~ exponential(2);</span></span>
-<span id="cb2-61"><a></a><span class="in">  gamma ~ gamma(8,5); </span></span>
-<span id="cb2-62"><a></a><span class="in">  </span></span>
-<span id="cb2-63"><a></a><span class="in">  // risk score</span></span>
-<span id="cb2-64"><a></a><span class="in">  matrix[n,m] rs = X*beta;</span></span>
-<span id="cb2-65"><a></a><span class="in">  </span></span>
-<span id="cb2-66"><a></a><span class="in">  // model</span></span>
-<span id="cb2-67"><a></a><span class="in">  // Following Equation (12.9) from Collett (2023)</span></span>
-<span id="cb2-68"><a></a><span class="in">  for( j in 1:m ){</span></span>
-<span id="cb2-69"><a></a><span class="in">    for( i in 1:n ){</span></span>
-<span id="cb2-70"><a></a><span class="in">      target += s[i,j] * log_hij( t[i], rs[i,j], lambda[j], gamma[j] ) -</span></span>
-<span id="cb2-71"><a></a><span class="in">                Hij( t[i], rs[i,j], lambda[j], gamma[j] );</span></span>
-<span id="cb2-72"><a></a><span class="in">    }</span></span>
-<span id="cb2-73"><a></a><span class="in">  }</span></span>
-<span id="cb2-74"><a></a><span class="in">}</span></span>
-<span id="cb2-75"><a></a><span class="in">generated quantities {</span></span>
-<span id="cb2-76"><a></a><span class="in">  matrix[ns,m] Fij_MC; // Cumulative Incidence Functions</span></span>
-<span id="cb2-77"><a></a><span class="in">  matrix[ns,m] Fij_I;</span></span>
-<span id="cb2-78"><a></a><span class="in">  </span></span>
-<span id="cb2-79"><a></a><span class="in">  // risk score</span></span>
-<span id="cb2-80"><a></a><span class="in">  vector[m] rs = to_vector(xs*beta);</span></span>
-<span id="cb2-81"><a></a><span class="in">  </span></span>
-<span id="cb2-82"><a></a><span class="in">  // flatten all parameters into a single array 3*m = m(rs) + m(lambda) + m(gamma) </span></span>
-<span id="cb2-83"><a></a><span class="in">  array[3*m] real flat_theta;</span></span>
-<span id="cb2-84"><a></a><span class="in">  for (j in 1:m) {</span></span>
-<span id="cb2-85"><a></a><span class="in">    flat_theta[j] = rs[j];</span></span>
-<span id="cb2-86"><a></a><span class="in">    flat_theta[m+j] = lambda[j];</span></span>
-<span id="cb2-87"><a></a><span class="in">    flat_theta[2*m+j] = gamma[j];</span></span>
-<span id="cb2-88"><a></a><span class="in">  }</span></span>
-<span id="cb2-89"><a></a><span class="in">  </span></span>
-<span id="cb2-90"><a></a><span class="in">  for (i in 1:ns) {</span></span>
-<span id="cb2-91"><a></a><span class="in">    for (j in 1:m) {</span></span>
-<span id="cb2-92"><a></a><span class="in">      // Integrate using Monte Carlo approximation</span></span>
-<span id="cb2-93"><a></a><span class="in">      real fij_sum = 0;</span></span>
-<span id="cb2-94"><a></a><span class="in">      for (k in 1:ms) {</span></span>
-<span id="cb2-95"><a></a><span class="in">        real u = uniform_rng(0, ts[i]);</span></span>
-<span id="cb2-96"><a></a><span class="in">        fij_sum += exp(log_fij(u, j, rs, lambda, gamma, m));</span></span>
-<span id="cb2-97"><a></a><span class="in">      }</span></span>
-<span id="cb2-98"><a></a><span class="in">      Fij_MC[i,j] = ts[i] * (fij_sum / ms); </span></span>
-<span id="cb2-99"><a></a><span class="in">      // Integrate using Double Exponential Quadrature</span></span>
-<span id="cb2-100"><a></a><span class="in">      Fij_I[i,j] = integrate_1d( fij, 0.0, ts[i], flat_theta, {0.0}, {j,m} );</span></span>
-<span id="cb2-101"><a></a><span class="in">    }</span></span>
-<span id="cb2-102"><a></a><span class="in">  }</span></span>
-<span id="cb2-103"><a></a><span class="in">}</span></span>
-<span id="cb2-104"><a></a><span class="in">"</span></span>
-<span id="cb2-105"><a></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-4"><a></a><span class="in">  // cause-specific log hazard function</span></span>
+<span id="cb2-5"><a></a><span class="in">  real log_hij( real t, real rs, real lambda, real gamma ){</span></span>
+<span id="cb2-6"><a></a><span class="in">    return( rs + log(lambda) + log(gamma) + (gamma-1)*log(t) );</span></span>
+<span id="cb2-7"><a></a><span class="in">  }</span></span>
+<span id="cb2-8"><a></a><span class="in">  // cause-specific cummulative hazard function</span></span>
+<span id="cb2-9"><a></a><span class="in">  real Hij( real t, real rs, real lambda, real gamma ){</span></span>
+<span id="cb2-10"><a></a><span class="in">    return( exp( rs ) * lambda * t^gamma ); </span></span>
+<span id="cb2-11"><a></a><span class="in">  }</span></span>
+<span id="cb2-12"><a></a><span class="in">  // overall log-survival function</span></span>
+<span id="cb2-13"><a></a><span class="in">  real log_S( real t, vector rs, vector lambda, vector gamma, int m ) {</span></span>
+<span id="cb2-14"><a></a><span class="in">    real oSt = 0;</span></span>
+<span id="cb2-15"><a></a><span class="in">    for (j in 1:m) {</span></span>
+<span id="cb2-16"><a></a><span class="in">      oSt += Hij(t, rs[j], lambda[j], gamma[j]);</span></span>
+<span id="cb2-17"><a></a><span class="in">    }</span></span>
+<span id="cb2-18"><a></a><span class="in">    return(-oSt);</span></span>
+<span id="cb2-19"><a></a><span class="in">  }</span></span>
+<span id="cb2-20"><a></a><span class="in">  // cause specific log-density</span></span>
+<span id="cb2-21"><a></a><span class="in">  real log_fij( real t, int j, vector rs, vector lambda, vector gamma, int m ){</span></span>
+<span id="cb2-22"><a></a><span class="in">    return ( log_hij( t, rs[j], lambda[j], gamma[j] ) + </span></span>
+<span id="cb2-23"><a></a><span class="in">             log_S( t, rs, lambda, gamma, m ) );</span></span>
+<span id="cb2-24"><a></a><span class="in">  }</span></span>
+<span id="cb2-25"><a></a><span class="in">  // Integrand for the density function</span></span>
+<span id="cb2-26"><a></a><span class="in">  real fij(real t, real xc, array[] real theta, array[] real x_r, array[] int x_i) {</span></span>
+<span id="cb2-27"><a></a><span class="in">    // parameters and data</span></span>
+<span id="cb2-28"><a></a><span class="in">    int j = x_i[1];</span></span>
+<span id="cb2-29"><a></a><span class="in">    int m = x_i[2];</span></span>
+<span id="cb2-30"><a></a><span class="in">    vector[m] rs = to_vector( theta[1:m] );</span></span>
+<span id="cb2-31"><a></a><span class="in">    vector[m] lambda = to_vector( theta[(m+1):(2*m)] );</span></span>
+<span id="cb2-32"><a></a><span class="in">    vector[m] gamma =  to_vector( theta[(2*m+1):(3*m)] );</span></span>
+<span id="cb2-33"><a></a><span class="in">    return( exp( log_fij( t, j, rs, lambda, gamma, m ) ) );</span></span>
+<span id="cb2-34"><a></a><span class="in">  }</span></span>
+<span id="cb2-35"><a></a><span class="in">}</span></span>
+<span id="cb2-36"><a></a><span class="in">data {</span></span>
+<span id="cb2-37"><a></a><span class="in">  // fitting data</span></span>
+<span id="cb2-38"><a></a><span class="in">  int&lt;lower=0&gt; m;       // number of causes</span></span>
+<span id="cb2-39"><a></a><span class="in">  int&lt;lower=0&gt; n;       // num obs</span></span>
+<span id="cb2-40"><a></a><span class="in">  int&lt;lower=0&gt; q;       // num covariates</span></span>
+<span id="cb2-41"><a></a><span class="in">  vector[n] t;          // time</span></span>
+<span id="cb2-42"><a></a><span class="in">  matrix[n,m] s;        // cause of failure</span></span>
+<span id="cb2-43"><a></a><span class="in">  matrix[n,q] X;        // covariates</span></span>
+<span id="cb2-44"><a></a><span class="in">  </span></span>
+<span id="cb2-45"><a></a><span class="in">  // For Marginal Approximation</span></span>
+<span id="cb2-46"><a></a><span class="in">  int&lt;lower=1&gt; ms;      // Number of Monte Carlo draws (e.g., 100)</span></span>
+<span id="cb2-47"><a></a><span class="in">  int&lt;lower=0&gt; ns;      // number of time samples</span></span>
+<span id="cb2-48"><a></a><span class="in">  vector[ns] ts;         // time samples</span></span>
+<span id="cb2-49"><a></a><span class="in">  matrix[1,q] XS;       // covariates for simulation</span></span>
+<span id="cb2-50"><a></a><span class="in">}</span></span>
+<span id="cb2-51"><a></a><span class="in">parameters {</span></span>
+<span id="cb2-52"><a></a><span class="in">  matrix[q,m] beta;           // beta[covariate,cause]</span></span>
+<span id="cb2-53"><a></a><span class="in">  vector&lt;lower=0&gt;[m] lambda;  // lambda[cause]</span></span>
+<span id="cb2-54"><a></a><span class="in">  vector&lt;lower=0&gt;[m] gamma;   // gamma[cause]</span></span>
+<span id="cb2-55"><a></a><span class="in">}</span></span>
+<span id="cb2-56"><a></a><span class="in">model {</span></span>
+<span id="cb2-57"><a></a><span class="in">  // priors</span></span>
+<span id="cb2-58"><a></a><span class="in">  to_vector(beta) ~ normal(0,2);</span></span>
+<span id="cb2-59"><a></a><span class="in">  lambda ~ exponential(2);</span></span>
+<span id="cb2-60"><a></a><span class="in">  gamma ~ gamma(8,5); </span></span>
+<span id="cb2-61"><a></a><span class="in">  </span></span>
+<span id="cb2-62"><a></a><span class="in">  // risk score</span></span>
+<span id="cb2-63"><a></a><span class="in">  matrix[n,m] rs = X*beta;</span></span>
+<span id="cb2-64"><a></a><span class="in">  </span></span>
+<span id="cb2-65"><a></a><span class="in">  // log-likelihood</span></span>
+<span id="cb2-66"><a></a><span class="in">  for( j in 1:m ){</span></span>
+<span id="cb2-67"><a></a><span class="in">    for( i in 1:n ){</span></span>
+<span id="cb2-68"><a></a><span class="in">      target += s[i,j] * log_hij( t[i], rs[i,j], lambda[j], gamma[j] ) -</span></span>
+<span id="cb2-69"><a></a><span class="in">                Hij( t[i], rs[i,j], lambda[j], gamma[j] );</span></span>
+<span id="cb2-70"><a></a><span class="in">    }</span></span>
+<span id="cb2-71"><a></a><span class="in">  }</span></span>
+<span id="cb2-72"><a></a><span class="in">}</span></span>
+<span id="cb2-73"><a></a><span class="in">generated quantities {</span></span>
+<span id="cb2-74"><a></a><span class="in">  matrix[ns,m] Fij_MC;</span></span>
+<span id="cb2-75"><a></a><span class="in">  matrix[ns,m] Fij_I;</span></span>
+<span id="cb2-76"><a></a><span class="in">  </span></span>
+<span id="cb2-77"><a></a><span class="in">  // risk score</span></span>
+<span id="cb2-78"><a></a><span class="in">  vector[m] rs = to_vector(XS*beta);</span></span>
+<span id="cb2-79"><a></a><span class="in">  </span></span>
+<span id="cb2-80"><a></a><span class="in">  // flatten parameters </span></span>
+<span id="cb2-81"><a></a><span class="in">  array[3*m] real flat_theta;</span></span>
+<span id="cb2-82"><a></a><span class="in">  for (j in 1:m) {</span></span>
+<span id="cb2-83"><a></a><span class="in">    flat_theta[j] = rs[j];</span></span>
+<span id="cb2-84"><a></a><span class="in">    flat_theta[m+j] = lambda[j];</span></span>
+<span id="cb2-85"><a></a><span class="in">    flat_theta[2*m+j] = gamma[j];</span></span>
+<span id="cb2-86"><a></a><span class="in">  }</span></span>
+<span id="cb2-87"><a></a><span class="in">  </span></span>
+<span id="cb2-88"><a></a><span class="in">  for (i in 1:ns) {</span></span>
+<span id="cb2-89"><a></a><span class="in">    for (j in 1:m) {</span></span>
+<span id="cb2-90"><a></a><span class="in">    </span></span>
+<span id="cb2-91"><a></a><span class="in">      // Monte Carlo integration</span></span>
+<span id="cb2-92"><a></a><span class="in">      real fij_sum = 0;</span></span>
+<span id="cb2-93"><a></a><span class="in">      for (k in 1:ms) {</span></span>
+<span id="cb2-94"><a></a><span class="in">        real u = uniform_rng(0, ts[i]);</span></span>
+<span id="cb2-95"><a></a><span class="in">        fij_sum += exp(log_fij(u, j, rs, lambda, gamma, m));</span></span>
+<span id="cb2-96"><a></a><span class="in">      }</span></span>
+<span id="cb2-97"><a></a><span class="in">      Fij_MC[i,j] = ts[i] * (fij_sum / ms); </span></span>
+<span id="cb2-98"><a></a><span class="in">      // Fij = t[i] * p(t[i])</span></span>
+<span id="cb2-99"><a></a><span class="in">      </span></span>
+<span id="cb2-100"><a></a><span class="in">      // Double Exponential Quadrature integration</span></span>
+<span id="cb2-101"><a></a><span class="in">      Fij_I[i,j] = integrate_1d( fij, 0.0, ts[i], flat_theta, {0.0}, {j,m} );</span></span>
+<span id="cb2-102"><a></a><span class="in">      </span></span>
+<span id="cb2-103"><a></a><span class="in">    }</span></span>
+<span id="cb2-104"><a></a><span class="in">  }</span></span>
+<span id="cb2-105"><a></a><span class="in">}</span></span>
+<span id="cb2-106"><a></a><span class="in">"</span></span>
+<span id="cb2-107"><a></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="validation-and-regulatory-aligment" class="slide level2" style="font-size:64%;">
-<h2>7. Validation and regulatory aligment</h2>
-<p>Per the <strong>FDA Draft Guidance on Bayesian Methodology</strong> <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span>, utilizing the J&amp;F model <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> requires the creation of two core documents:</p>
+<section id="results-data-description" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Data description</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Set environment</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="co"># working environment ####</span></span>
+<span id="cb3-2"><a></a></span>
+<span id="cb3-3"><a></a><span class="co"># cleaning R start</span></span>
+<span id="cb3-4"><a></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>()); <span class="fu">gc</span>()</span>
+<span id="cb3-5"><a></a></span>
+<span id="cb3-6"><a></a><span class="co"># loading libraries</span></span>
+<span id="cb3-7"><a></a>libraries <span class="ot">=</span> <span class="fu">c</span>( </span>
+<span id="cb3-8"><a></a>  <span class="co"># general purpose</span></span>
+<span id="cb3-9"><a></a>  <span class="st">'here'</span>,<span class="st">'tidyverse'</span>,<span class="st">'rtables'</span>,<span class="st">'gt'</span>,<span class="st">'cowplot'</span>,</span>
+<span id="cb3-10"><a></a>  </span>
+<span id="cb3-11"><a></a>  <span class="co"># frequentist implementations</span></span>
+<span id="cb3-12"><a></a>  <span class="st">'survival'</span>,<span class="st">'cmprsk'</span>,<span class="st">'tidycmprsk'</span>,<span class="st">'ggsurvfit'</span>,</span>
+<span id="cb3-13"><a></a>  </span>
+<span id="cb3-14"><a></a>  <span class="co"># Bayesian implementations</span></span>
+<span id="cb3-15"><a></a>  <span class="st">'cmdstanr'</span>, <span class="st">'coda'</span>,<span class="st">'posterior'</span>,<span class="st">'bayesplot'</span></span>
+<span id="cb3-16"><a></a>) </span>
+<span id="cb3-17"><a></a><span class="fu">sapply</span>(libraries, require, <span class="at">character.only=</span>T)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Dataset load</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="co"># Source data ####</span></span>
+<span id="cb4-2"><a></a></span>
+<span id="cb4-3"><a></a><span class="co"># load data</span></span>
+<span id="cb4-4"><a></a>rd  <span class="ot">=</span> <span class="fu">file.path</span>( <span class="fu">here</span>(), <span class="st">'data'</span>, <span class="st">'liver transplant example.dat'</span>)</span>
+<span id="cb4-5"><a></a>ds <span class="ot">=</span> rd <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a></a>  <span class="fu">read.table</span>( <span class="at">header=</span>T )</span>
+<span id="cb4-7"><a></a></span>
+<span id="cb4-8"><a></a>              </span>
+<span id="cb4-9"><a></a><span class="co"># data structure</span></span>
+<span id="cb4-10"><a></a><span class="co"># str(ds)</span></span>
+<span id="cb4-11"><a></a><span class="co"># </span></span>
+<span id="cb4-12"><a></a><span class="co"># Note:</span></span>
+<span id="cb4-13"><a></a><span class="co">#   patient: patient number</span></span>
+<span id="cb4-14"><a></a><span class="co">#   age: age at baseline</span></span>
+<span id="cb4-15"><a></a><span class="co">#   treatment: 1=Solution A, 2=Solution B</span></span>
+<span id="cb4-16"><a></a><span class="co">#   disease: primary liver disease, 1=PBC, 2=PSC, 3=ALD</span></span>
+<span id="cb4-17"><a></a><span class="co">#   time: time to cause of graft failure</span></span>
+<span id="cb4-18"><a></a><span class="co">#   status: 1=event, 0=censored</span></span>
+<span id="cb4-19"><a></a><span class="co">#   cof: cause of graft failure, 0=functioning graft, 1=rejection, 2=thrombosis, 3=recurrent disease, 4=other</span></span>
+<span id="cb4-20"><a></a></span>
+<span id="cb4-21"><a></a></span>
+<span id="cb4-22"><a></a><span class="co"># convert to factor</span></span>
+<span id="cb4-23"><a></a>ds <span class="ot">=</span> ds <span class="sc">%&gt;%</span></span>
+<span id="cb4-24"><a></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-25"><a></a>    <span class="at">treatment_label =</span> treatment,</span>
+<span id="cb4-26"><a></a>    <span class="at">disease_label =</span> disease,</span>
+<span id="cb4-27"><a></a>    <span class="at">cof_label =</span> cof ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-28"><a></a>  <span class="fu">mutate_at</span>( </span>
+<span id="cb4-29"><a></a>    <span class="at">.vars =</span> <span class="fu">vars</span>(treatment_label), </span>
+<span id="cb4-30"><a></a>    <span class="at">.funs =</span> factor,</span>
+<span id="cb4-31"><a></a>    <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, </span>
+<span id="cb4-32"><a></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">'Solution A'</span>,<span class="st">'Solution B'</span>)</span>
+<span id="cb4-33"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-34"><a></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-35"><a></a>    <span class="at">treatment_label =</span> </span>
+<span id="cb4-36"><a></a>      <span class="fu">fct_relevel</span>( treatment_label, </span>
+<span id="cb4-37"><a></a>                   <span class="fu">c</span>(<span class="st">'Solution B'</span>,<span class="st">'Solution A'</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb4-38"><a></a>  <span class="fu">mutate_at</span>( </span>
+<span id="cb4-39"><a></a>    <span class="at">.vars =</span> <span class="fu">vars</span>(disease_label), </span>
+<span id="cb4-40"><a></a>    <span class="at">.funs =</span> factor,</span>
+<span id="cb4-41"><a></a>    <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, </span>
+<span id="cb4-42"><a></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">'PBC'</span>,<span class="st">'PSC'</span>,<span class="st">'ALD'</span>) ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-43"><a></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-44"><a></a>    <span class="at">disease_label =</span> </span>
+<span id="cb4-45"><a></a>      <span class="fu">fct_relevel</span>( disease_label, </span>
+<span id="cb4-46"><a></a>                   <span class="fu">c</span>(<span class="st">'ALD'</span>,<span class="st">'PBC'</span>,<span class="st">'PSC'</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb4-47"><a></a>  <span class="fu">mutate_at</span>( </span>
+<span id="cb4-48"><a></a>    <span class="at">.vars =</span> <span class="fu">vars</span>(cof_label), </span>
+<span id="cb4-49"><a></a>    <span class="at">.funs =</span> factor,</span>
+<span id="cb4-50"><a></a>    <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">4</span>, </span>
+<span id="cb4-51"><a></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">'Functioning graft'</span>, </span>
+<span id="cb4-52"><a></a>               <span class="st">'Organ Rejection'</span>, </span>
+<span id="cb4-53"><a></a>               <span class="st">'Hepatic Artery Thrombosis'</span>, </span>
+<span id="cb4-54"><a></a>               <span class="st">'Recurrent Disease'</span>, </span>
+<span id="cb4-55"><a></a>               <span class="st">'Other'</span>) )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Demographics table (DMT01)</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="do">## Demographics (DMT01) #####</span></span>
+<span id="cb5-2"><a></a></span>
+<span id="cb5-3"><a></a><span class="co"># calculation and formatting function</span></span>
+<span id="cb5-4"><a></a>f_summary <span class="ot">=</span> <span class="cf">function</span>(x) {</span>
+<span id="cb5-5"><a></a>  <span class="cf">if</span> ( <span class="fu">is.numeric</span>(x) ) {</span>
+<span id="cb5-6"><a></a>    <span class="fu">in_rows</span>(</span>
+<span id="cb5-7"><a></a>      <span class="st">"n"</span> <span class="ot">=</span> <span class="fu">rcell</span>( <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(x)), <span class="at">format =</span> <span class="st">"xx"</span>),</span>
+<span id="cb5-8"><a></a>      <span class="st">"Mean (SD)"</span> <span class="ot">=</span> <span class="fu">rcell</span>( <span class="fu">c</span>(<span class="fu">mean</span>(x, <span class="at">na.rm=</span>T), <span class="fu">sd</span>(x, <span class="at">na.rm=</span>T)), <span class="at">format =</span> <span class="st">"xx.x (xx.x)"</span>),</span>
+<span id="cb5-9"><a></a>      <span class="st">"Median"</span> <span class="ot">=</span> <span class="fu">rcell</span>( <span class="fu">median</span>(x, <span class="at">na.rm=</span>T), <span class="at">format =</span> <span class="st">"xx.x"</span>),</span>
+<span id="cb5-10"><a></a>      <span class="st">"Min - Max"</span> <span class="ot">=</span> <span class="fu">rcell</span>( <span class="fu">range</span>(x, <span class="at">na.rm=</span>T), <span class="at">format =</span> <span class="st">"xx.x - xx.x"</span>)</span>
+<span id="cb5-11"><a></a>    )</span>
+<span id="cb5-12"><a></a>  } <span class="cf">else</span> <span class="cf">if</span> ( <span class="fu">is.factor</span>(x) ) {</span>
+<span id="cb5-13"><a></a>    tab <span class="ot">=</span> <span class="fu">c</span>( <span class="fu">table</span>(x) )</span>
+<span id="cb5-14"><a></a>    <span class="fu">do.call</span>( </span>
+<span id="cb5-15"><a></a>      in_rows, </span>
+<span id="cb5-16"><a></a>      <span class="fu">c</span>( <span class="st">"n"</span> <span class="ot">=</span> <span class="fu">rcell</span>( <span class="fu">sum</span>(tab), <span class="at">format =</span> <span class="st">"xx"</span> ),</span>
+<span id="cb5-17"><a></a>         <span class="fu">lapply</span>(tab, rcell, <span class="at">format =</span> <span class="st">"xx"</span> ) ) )</span>
+<span id="cb5-18"><a></a>  } <span class="cf">else</span> {</span>
+<span id="cb5-19"><a></a>    <span class="fu">stop</span>(<span class="st">"type not supported"</span>)</span>
+<span id="cb5-20"><a></a>  }</span>
+<span id="cb5-21"><a></a>}</span>
+<span id="cb5-22"><a></a></span>
+<span id="cb5-23"><a></a><span class="co"># table</span></span>
+<span id="cb5-24"><a></a><span class="fu">basic_table</span>( <span class="at">show_colcounts=</span>T ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-25"><a></a>  <span class="fu">split_cols_by</span>( </span>
+<span id="cb5-26"><a></a>    <span class="at">var =</span> <span class="st">"treatment_label"</span>,</span>
+<span id="cb5-27"><a></a>    <span class="at">ref_group =</span> <span class="st">"Solution B"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-28"><a></a>  <span class="fu">add_overall_col</span>(<span class="st">"All Patients"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-29"><a></a>  <span class="fu">analyze</span>( </span>
+<span id="cb5-30"><a></a>    <span class="at">vars =</span> <span class="fu">c</span>(<span class="st">'age'</span>,<span class="st">'disease_label'</span>), </span>
+<span id="cb5-31"><a></a>    <span class="at">afun =</span> f_summary,</span>
+<span id="cb5-32"><a></a>    <span class="at">var_labels =</span> <span class="fu">c</span>(<span class="st">'Age (yr)'</span>,<span class="st">'Liver Disease'</span>) </span>
+<span id="cb5-33"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-34"><a></a>  <span class="fu">build_table</span>( <span class="at">df=</span>ds )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                Solution B    Solution A    All Patients
+                  (N=694)      (N=1067)       (N=1761)  
+————————————————————————————————————————————————————————
+Age (yr)                                                
+  n                 694          1067           1761    
+  Mean (SD)     53.6 (9.4)    53.3 (9.3)     53.5 (9.3) 
+  Median           55.0          54.0           55.0    
+  Min - Max     18.0 - 74.0   18.0 - 74.0   18.0 - 74.0 
+Liver Disease                                           
+  n                 694          1067           1761    
+  ALD               200           733           933     
+  PBC               400           69            469     
+  PSC               94            265           359     </code></pre>
+</div>
+</div>
+</section>
+<section id="results-data-description-1" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Data description</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Deaths table (DTHT01)</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="do">## Deaths (DTHT01) #####</span></span>
+<span id="cb7-2"><a></a></span>
+<span id="cb7-3"><a></a><span class="co"># calculation and formatting functions</span></span>
+<span id="cb7-4"><a></a>event_count <span class="ot">=</span> <span class="cf">function</span>(x, .N_col) {</span>
+<span id="cb7-5"><a></a>  tab <span class="ot">=</span> <span class="fu">c</span>( <span class="fu">table</span>(x) )</span>
+<span id="cb7-6"><a></a>  <span class="fu">in_rows</span>(</span>
+<span id="cb7-7"><a></a>    <span class="st">"Total number of events"</span> <span class="ot">=</span> <span class="fu">rcell</span>( tab[<span class="dv">2</span>] <span class="sc">*</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span> <span class="sc">/</span> .N_col), <span class="at">format =</span> <span class="st">"xx (xx.x%)"</span> )</span>
+<span id="cb7-8"><a></a>  )</span>
+<span id="cb7-9"><a></a>}</span>
+<span id="cb7-10"><a></a></span>
+<span id="cb7-11"><a></a>cof_count <span class="ot">=</span> <span class="cf">function</span>(x, .N_col) {</span>
+<span id="cb7-12"><a></a>  tab <span class="ot">=</span> <span class="fu">c</span>( <span class="fu">table</span>(x) )</span>
+<span id="cb7-13"><a></a>  tab <span class="ot">=</span> tab[ <span class="fu">names</span>(tab) <span class="sc">!=</span> <span class="st">"Functioning graft"</span> ]</span>
+<span id="cb7-14"><a></a>  <span class="fu">do.call</span>( </span>
+<span id="cb7-15"><a></a>    in_rows, </span>
+<span id="cb7-16"><a></a>    <span class="fu">c</span>( <span class="st">"n"</span> <span class="ot">=</span> <span class="fu">rcell</span>( <span class="fu">sum</span>(tab), <span class="at">format =</span> <span class="st">"xx"</span> ),</span>
+<span id="cb7-17"><a></a>       <span class="fu">lapply</span>( </span>
+<span id="cb7-18"><a></a>         tab,</span>
+<span id="cb7-19"><a></a>         <span class="cf">function</span>(xi){ <span class="fu">rcell</span>(xi <span class="sc">*</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span> <span class="sc">/</span> .N_col), <span class="at">format =</span> <span class="st">"xx (xx.x%)"</span>) } </span>
+<span id="cb7-20"><a></a>       ) ) )</span>
+<span id="cb7-21"><a></a>}</span>
+<span id="cb7-22"><a></a></span>
+<span id="cb7-23"><a></a></span>
+<span id="cb7-24"><a></a><span class="co"># table</span></span>
+<span id="cb7-25"><a></a><span class="fu">basic_table</span>( <span class="at">show_colcounts=</span>T ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-26"><a></a>  <span class="fu">split_cols_by</span>( </span>
+<span id="cb7-27"><a></a>    <span class="at">var =</span> <span class="st">"treatment_label"</span>, </span>
+<span id="cb7-28"><a></a>    <span class="at">ref_group =</span> <span class="st">"Solution B"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-29"><a></a>  <span class="fu">add_overall_col</span>(<span class="st">"All Patients"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-30"><a></a>  <span class="fu">analyze</span>( </span>
+<span id="cb7-31"><a></a>    <span class="at">vars =</span> <span class="st">"status"</span>, </span>
+<span id="cb7-32"><a></a>    <span class="at">afun =</span> event_count, </span>
+<span id="cb7-33"><a></a>    <span class="at">show_labels =</span> <span class="st">"hidden"</span> ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-34"><a></a>  <span class="fu">analyze</span>( </span>
+<span id="cb7-35"><a></a>    <span class="at">vars =</span> <span class="st">"cof_label"</span>, </span>
+<span id="cb7-36"><a></a>    <span class="at">afun =</span> cof_count, </span>
+<span id="cb7-37"><a></a>    <span class="at">var_labels =</span> <span class="st">"Cause of graft failure"</span>, </span>
+<span id="cb7-38"><a></a>    <span class="at">show_labels =</span> <span class="st">"visible"</span> ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-39"><a></a>  <span class="fu">build_table</span>( <span class="at">df=</span>ds )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                              Solution B    Solution A    All Patients
+                                (N=694)      (N=1067)       (N=1761)  
+——————————————————————————————————————————————————————————————————————
+Total number of events        106 (15.3%)   159 (14.9%)   265 (15.0%) 
+Cause of graft failure                                                
+  n                               104           156           260     
+  Organ Rejection              14 (2.0%)     15 (1.4%)     29 (1.6%)  
+  Hepatic Artery Thrombosis    32 (4.6%)     41 (3.8%)     73 (4.1%)  
+  Recurrent Disease            14 (2.0%)     28 (2.6%)     42 (2.4%)  
+  Other                        44 (6.3%)     72 (6.7%)     116 (6.6%) </code></pre>
+</div>
+</div>
+<aside class="notes">
+<p>from <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a>: - Table Demography <code>DMT01</code> - Table Deaths <code>DTHT01</code></p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="results-frequentist-fine-gray-model" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Frequentist Fine-Gray model</h2>
+<p>About the fitting process:</p>
+<div>
+<ul>
+<li class="fragment">It used the <code>cmprsk</code> package <span class="citation" data-cites="Gray_2024">[<a href="#/references" role="doc-biblioref" onclick="">7</a>]</span> and the tidy-wrapper <code>tidycmprsk</code> <span class="citation" data-cites="Sjoberg_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">14</a>]</span>.</li>
+<li class="fragment">It runs all causes in a second</li>
+</ul>
+</div>
+<div class="fragment">
+<div class="cell">
+<details class="code-fold">
+<summary>Fine-Gray regression (Equivalence: COXT01)</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r code-overflow-wrap number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="do">### Bayseian Fine-Gray regression ####</span></span>
+<span id="cb9-2"><a></a><span class="co"># (Equivalence: COXT01) </span></span>
+<span id="cb9-3"><a></a></span>
+<span id="cb9-4"><a></a><span class="co"># load ADR?</span></span>
+<span id="cb9-5"><a></a>hr_cof <span class="ot">=</span> <span class="fu">readRDS</span>( </span>
+<span id="cb9-6"><a></a>  <span class="fu">file.path</span>( </span>
+<span id="cb9-7"><a></a>    <span class="fu">here</span>(),</span>
+<span id="cb9-8"><a></a>    <span class="st">'results'</span>,</span>
+<span id="cb9-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_FG.RDS'</span>) ) )</span>
+<span id="cb9-10"><a></a></span>
+<span id="cb9-11"><a></a></span>
+<span id="cb9-12"><a></a>hr_cof <span class="sc">%&gt;%</span></span>
+<span id="cb9-13"><a></a>  <span class="fu">select</span>( </span>
+<span id="cb9-14"><a></a>    <span class="st">'Effect/Covariate Included in the model'</span>, </span>
+<span id="cb9-15"><a></a>    <span class="st">'Hazard ratio'</span>, </span>
+<span id="cb9-16"><a></a>    lower, </span>
+<span id="cb9-17"><a></a>    upper, </span>
+<span id="cb9-18"><a></a>    <span class="st">'P(0.95&lt; HR &lt;1.1)'</span>, </span>
+<span id="cb9-19"><a></a>    cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-22"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-23"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb9-24"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
+<span id="cb9-25"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
+<span id="cb9-26"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-27"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb9-28"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
+<span id="cb9-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
+<span id="cb9-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-31"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb9-32"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb9-33"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
+<span id="cb9-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-35"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb9-36"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
+<span id="cb9-37"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb9-38"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-39"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<div id="nvgtljcelu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#nvgtljcelu table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#nvgtljcelu thead, #nvgtljcelu tbody, #nvgtljcelu tfoot, #nvgtljcelu tr, #nvgtljcelu td, #nvgtljcelu th {
+  border-style: none;
+}
+
+#nvgtljcelu p {
+  margin: 0;
+  padding: 0;
+}
+
+#nvgtljcelu .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#nvgtljcelu .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#nvgtljcelu .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#nvgtljcelu .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#nvgtljcelu .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#nvgtljcelu .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#nvgtljcelu .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#nvgtljcelu .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#nvgtljcelu .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#nvgtljcelu .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#nvgtljcelu .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#nvgtljcelu .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#nvgtljcelu .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#nvgtljcelu .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#nvgtljcelu .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nvgtljcelu .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#nvgtljcelu .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#nvgtljcelu .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#nvgtljcelu .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nvgtljcelu .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#nvgtljcelu .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nvgtljcelu .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#nvgtljcelu .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nvgtljcelu .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nvgtljcelu .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nvgtljcelu .gt_left {
+  text-align: left;
+}
+
+#nvgtljcelu .gt_center {
+  text-align: center;
+}
+
+#nvgtljcelu .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#nvgtljcelu .gt_font_normal {
+  font-weight: normal;
+}
+
+#nvgtljcelu .gt_font_bold {
+  font-weight: bold;
+}
+
+#nvgtljcelu .gt_font_italic {
+  font-style: italic;
+}
+
+#nvgtljcelu .gt_super {
+  font-size: 65%;
+}
+
+#nvgtljcelu .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#nvgtljcelu .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#nvgtljcelu .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#nvgtljcelu .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#nvgtljcelu .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#nvgtljcelu .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#nvgtljcelu .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#nvgtljcelu .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#nvgtljcelu div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header gt_col_headings gt_spanner_row">
+<th class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="col"></th>
+<th colspan="4" id="Treatment effect adjusted for covariate" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+Treatment effect adjusted for covariate
+</div></th>
+</tr>
+<tr class="odd gt_col_headings gt_spanner_row">
+<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
+<th rowspan="2" id="Hazard-ratio" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hazard ratio</th>
+<th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+90% CI
+</div></th>
+<th rowspan="2" id="P(0.95<-HR-<1.1)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(0.95&lt; HR &lt;1.1)</th>
+</tr>
+<tr class="header gt_col_headings">
+<th id="lower" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">lower</th>
+<th id="upper" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">upper</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd gt_group_heading_row">
+<td colspan="5" id="Organ Rejection" class="gt_group_heading" data-quarto-table-cell-role="th" scope="colgroup">Organ Rejection</td>
+</tr>
+<tr class="even gt_row_group_first">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.65</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.29</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.21</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0605</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.96</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.93</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">0.99</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.6055</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.69</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.25</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.38</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0663</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.17</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.49</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">2.16</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.1340</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>from <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a>: - Table Efficacy <code>COXT01</code> - Graphs Efficacy <code>KMG01</code></p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="results-frequentist-fine-gray-model-1" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Frequentist Fine-Gray model</h2>
+<div class="fragment">
+<div class="cell">
+<details class="code-fold">
+<summary>Fine-Gray failures plot (Equivalence: KMG01)</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="do">### Fine-Gray failures plot ####</span></span>
+<span id="cb10-2"><a></a><span class="co"># (Equivalence: KMG01)</span></span>
+<span id="cb10-3"><a></a></span>
+<span id="cb10-4"><a></a><span class="co"># require(ggsurvfit)</span></span>
+<span id="cb10-5"><a></a></span>
+<span id="cb10-6"><a></a>cof <span class="ot">=</span> <span class="fu">c</span>(<span class="st">'Organ Rejection'</span>, </span>
+<span id="cb10-7"><a></a>        <span class="st">'Hepatic Artery Thrombosis'</span>, </span>
+<span id="cb10-8"><a></a>        <span class="st">'Recurrent Disease'</span>, </span>
+<span id="cb10-9"><a></a>        <span class="st">'Other'</span>)</span>
+<span id="cb10-10"><a></a></span>
+<span id="cb10-11"><a></a><span class="cf">for</span>( j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">max</span>(ds<span class="sc">$</span>cof) ){</span>
+<span id="cb10-12"><a></a>  <span class="fu">assign</span>( </span>
+<span id="cb10-13"><a></a>    <span class="fu">paste0</span>(<span class="st">'F'</span>, j),</span>
+<span id="cb10-14"><a></a>    <span class="fu">cuminc</span>( </span>
+<span id="cb10-15"><a></a>      <span class="fu">Surv</span>(time, cof_label) <span class="sc">~</span> treatment_label, </span>
+<span id="cb10-16"><a></a>      <span class="at">data =</span> ds ) <span class="sc">%&gt;%</span></span>
+<span id="cb10-17"><a></a>      <span class="fu">ggcuminc</span>( <span class="at">outcome =</span> cof[j] ) <span class="sc">+</span></span>
+<span id="cb10-18"><a></a>      <span class="fu">add_confidence_interval</span>() <span class="sc">+</span></span>
+<span id="cb10-19"><a></a>      <span class="fu">add_risktable</span>() <span class="sc">+</span></span>
+<span id="cb10-20"><a></a>      <span class="fu">scale_ggsurvfit</span>( </span>
+<span id="cb10-21"><a></a>        <span class="at">x_scales =</span> <span class="fu">list</span>(<span class="at">breaks=</span><span class="fu">seq</span>(<span class="dv">0</span>,<span class="fu">max</span>(ds<span class="sc">$</span>time), <span class="at">by=</span><span class="dv">500</span>)),</span>
+<span id="cb10-22"><a></a>        <span class="at">y_scales =</span> <span class="fu">list</span>(<span class="at">limits=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.15</span>)) )</span>
+<span id="cb10-23"><a></a>  )</span>
+<span id="cb10-24"><a></a>}</span>
+<span id="cb10-25"><a></a></span>
+<span id="cb10-26"><a></a>F1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="Competing-Risks-in-Liver-Transplantation_files/figure-revealjs/unnamed-chunk-6-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="results-bayesian-fine-gray-model" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Bayesian Fine-Gray model</h2>
+<p>About the fitting process:</p>
+<div>
+<ul>
+<li class="fragment">It used <code>Stan</code> <span class="citation" data-cites="Stan_2026a Stan_2026b">[<a href="#/references" role="doc-biblioref" onclick="">11</a>, <a href="#/references" role="doc-biblioref" onclick="">12</a>]</span> via the <code>cmdstanr</code> package <span class="citation" data-cites="Gabry_et_al_2025b">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span>.</li>
+<li class="fragment">It runs all causes in <span class="math inline">\(250-300\)</span> seconds (<span class="math inline">\(4.2-5\)</span> minutes),</li>
+<li class="fragment">It produces healthy sampling chains</li>
+</ul>
+</div>
+<div class="fragment">
+<div class="cell">
+<details class="code-fold">
+<summary>Bayesian Fine-Gray regression (Equivalence: COXT01)</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a><span class="do">### Fine-Gray regression ####</span></span>
+<span id="cb11-2"><a></a><span class="co"># (Equivalence: COXT01) </span></span>
+<span id="cb11-3"><a></a></span>
+<span id="cb11-4"><a></a><span class="co"># load ADR?</span></span>
+<span id="cb11-5"><a></a>hr_cof <span class="ot">=</span> <span class="fu">readRDS</span>( </span>
+<span id="cb11-6"><a></a>  <span class="fu">file.path</span>( </span>
+<span id="cb11-7"><a></a>    <span class="fu">here</span>(),</span>
+<span id="cb11-8"><a></a>    <span class="st">'results'</span>,</span>
+<span id="cb11-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_FG.RDS'</span>) ) )</span>
+<span id="cb11-10"><a></a></span>
+<span id="cb11-11"><a></a></span>
+<span id="cb11-12"><a></a>hr_cof <span class="sc">%&gt;%</span></span>
+<span id="cb11-13"><a></a>  <span class="fu">select</span>( </span>
+<span id="cb11-14"><a></a>    <span class="st">'Effect/Covariate Included in the model'</span>, </span>
+<span id="cb11-15"><a></a>    <span class="st">'Hazard ratio'</span>, </span>
+<span id="cb11-16"><a></a>    lower, </span>
+<span id="cb11-17"><a></a>    upper, </span>
+<span id="cb11-18"><a></a>    <span class="st">'P(0.95&lt; HR &lt;1.1)'</span>, </span>
+<span id="cb11-19"><a></a>    cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-22"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-23"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb11-24"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
+<span id="cb11-25"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
+<span id="cb11-26"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-27"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb11-28"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
+<span id="cb11-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
+<span id="cb11-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-31"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb11-32"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb11-33"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
+<span id="cb11-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-35"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb11-36"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
+<span id="cb11-37"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb11-38"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-39"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<div id="hoakrvkton" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#hoakrvkton table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#hoakrvkton thead, #hoakrvkton tbody, #hoakrvkton tfoot, #hoakrvkton tr, #hoakrvkton td, #hoakrvkton th {
+  border-style: none;
+}
+
+#hoakrvkton p {
+  margin: 0;
+  padding: 0;
+}
+
+#hoakrvkton .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#hoakrvkton .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#hoakrvkton .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#hoakrvkton .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#hoakrvkton .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#hoakrvkton .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#hoakrvkton .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#hoakrvkton .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#hoakrvkton .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#hoakrvkton .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#hoakrvkton .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#hoakrvkton .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#hoakrvkton .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#hoakrvkton .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#hoakrvkton .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hoakrvkton .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#hoakrvkton .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#hoakrvkton .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#hoakrvkton .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hoakrvkton .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#hoakrvkton .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hoakrvkton .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#hoakrvkton .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hoakrvkton .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#hoakrvkton .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hoakrvkton .gt_left {
+  text-align: left;
+}
+
+#hoakrvkton .gt_center {
+  text-align: center;
+}
+
+#hoakrvkton .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#hoakrvkton .gt_font_normal {
+  font-weight: normal;
+}
+
+#hoakrvkton .gt_font_bold {
+  font-weight: bold;
+}
+
+#hoakrvkton .gt_font_italic {
+  font-style: italic;
+}
+
+#hoakrvkton .gt_super {
+  font-size: 65%;
+}
+
+#hoakrvkton .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#hoakrvkton .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#hoakrvkton .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#hoakrvkton .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#hoakrvkton .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#hoakrvkton .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#hoakrvkton .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#hoakrvkton .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#hoakrvkton div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header gt_col_headings gt_spanner_row">
+<th class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="col"></th>
+<th colspan="4" id="Treatment effect adjusted for covariate" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+Treatment effect adjusted for covariate
+</div></th>
+</tr>
+<tr class="odd gt_col_headings gt_spanner_row">
+<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
+<th rowspan="2" id="Hazard-ratio" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hazard ratio</th>
+<th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+90% CI
+</div></th>
+<th rowspan="2" id="P(0.95<-HR-<1.1)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(0.95&lt; HR &lt;1.1)</th>
+</tr>
+<tr class="header gt_col_headings">
+<th id="lower" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">lower</th>
+<th id="upper" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">upper</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd gt_group_heading_row">
+<td colspan="5" id="Organ Rejection" class="gt_group_heading" data-quarto-table-cell-role="th" scope="colgroup">Organ Rejection</td>
+</tr>
+<tr class="even gt_row_group_first">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.65</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.29</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.21</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0605</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.96</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.93</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">0.99</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.6055</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.69</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.25</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.38</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0663</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.17</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.49</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">2.16</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.1340</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>from <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a>: - Table Efficacy <code>COXT01</code></p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="results-bayesian-jeong-fine-model" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Bayesian Jeong-Fine model</h2>
+<p>About the fitting process:</p>
+<div>
+<ul>
+<li class="fragment">It used <code>Stan</code> <span class="citation" data-cites="Stan_2026a Stan_2026b">[<a href="#/references" role="doc-biblioref" onclick="">11</a>, <a href="#/references" role="doc-biblioref" onclick="">12</a>]</span> via the <code>cmdstanr</code> package <span class="citation" data-cites="Gabry_et_al_2025b">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span>.</li>
+<li class="fragment">It runs all causes in <span class="math inline">\(930-970\)</span> seconds (<span class="math inline">\(15.5-16.2\)</span> minutes),</li>
+<li class="fragment">It produces healthy sampling chains,</li>
+<li class="fragment">… but the order and reference level of some variables can lead to non-finite integrals</li>
+</ul>
+</div>
+<aside class="notes">
+<p>from <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a>: - Table Efficacy <code>COXT01</code> - Graphs Efficacy <code>KMG01</code></p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="results-bayesian-jeong-fine-model-1" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Bayesian Jeong-Fine model</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Bayesian Jeong-Fine regression (Equivalence: COXT01)</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a><span class="do">### Jeong-Fine regression ####</span></span>
+<span id="cb12-2"><a></a><span class="co"># (Equivalence: COXT01) </span></span>
+<span id="cb12-3"><a></a></span>
+<span id="cb12-4"><a></a><span class="co"># load ADR?</span></span>
+<span id="cb12-5"><a></a>hr_cof <span class="ot">=</span> <span class="fu">readRDS</span>( </span>
+<span id="cb12-6"><a></a>  <span class="fu">file.path</span>( </span>
+<span id="cb12-7"><a></a>    <span class="fu">here</span>(),</span>
+<span id="cb12-8"><a></a>    <span class="st">'results'</span>,</span>
+<span id="cb12-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_JF.RDS'</span>) ) )</span>
+<span id="cb12-10"><a></a></span>
+<span id="cb12-11"><a></a></span>
+<span id="cb12-12"><a></a>hr_cof <span class="sc">%&gt;%</span></span>
+<span id="cb12-13"><a></a>  <span class="fu">select</span>( </span>
+<span id="cb12-14"><a></a>    <span class="st">'Effect/Covariate Included in the model'</span>, </span>
+<span id="cb12-15"><a></a>    <span class="st">'Hazard ratio'</span>, </span>
+<span id="cb12-16"><a></a>    lower, </span>
+<span id="cb12-17"><a></a>    upper, </span>
+<span id="cb12-18"><a></a>    <span class="st">'P(0.95&lt; HR &lt;1.1)'</span>, </span>
+<span id="cb12-19"><a></a>    cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-22"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-23"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb12-24"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
+<span id="cb12-25"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
+<span id="cb12-26"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-27"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb12-28"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
+<span id="cb12-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
+<span id="cb12-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-31"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb12-32"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb12-33"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
+<span id="cb12-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-35"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb12-36"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
+<span id="cb12-37"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb12-38"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-39"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<div id="ixaocoltdm" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#ixaocoltdm table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#ixaocoltdm thead, #ixaocoltdm tbody, #ixaocoltdm tfoot, #ixaocoltdm tr, #ixaocoltdm td, #ixaocoltdm th {
+  border-style: none;
+}
+
+#ixaocoltdm p {
+  margin: 0;
+  padding: 0;
+}
+
+#ixaocoltdm .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#ixaocoltdm .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#ixaocoltdm .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#ixaocoltdm .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#ixaocoltdm .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#ixaocoltdm .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#ixaocoltdm .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#ixaocoltdm .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#ixaocoltdm .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#ixaocoltdm .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#ixaocoltdm .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ixaocoltdm .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#ixaocoltdm .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#ixaocoltdm .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#ixaocoltdm .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ixaocoltdm .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#ixaocoltdm .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#ixaocoltdm .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#ixaocoltdm .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ixaocoltdm .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#ixaocoltdm .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ixaocoltdm .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#ixaocoltdm .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ixaocoltdm .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ixaocoltdm .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ixaocoltdm .gt_left {
+  text-align: left;
+}
+
+#ixaocoltdm .gt_center {
+  text-align: center;
+}
+
+#ixaocoltdm .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#ixaocoltdm .gt_font_normal {
+  font-weight: normal;
+}
+
+#ixaocoltdm .gt_font_bold {
+  font-weight: bold;
+}
+
+#ixaocoltdm .gt_font_italic {
+  font-style: italic;
+}
+
+#ixaocoltdm .gt_super {
+  font-size: 65%;
+}
+
+#ixaocoltdm .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#ixaocoltdm .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#ixaocoltdm .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#ixaocoltdm .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#ixaocoltdm .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#ixaocoltdm .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#ixaocoltdm .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#ixaocoltdm .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#ixaocoltdm div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header gt_col_headings gt_spanner_row">
+<th class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="col"></th>
+<th colspan="4" id="Treatment effect adjusted for covariate" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+Treatment effect adjusted for covariate
+</div></th>
+</tr>
+<tr class="odd gt_col_headings gt_spanner_row">
+<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
+<th rowspan="2" id="Hazard-ratio" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hazard ratio</th>
+<th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+90% CI
+</div></th>
+<th rowspan="2" id="P(0.95<-HR-<1.1)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(0.95&lt; HR &lt;1.1)</th>
+</tr>
+<tr class="header gt_col_headings">
+<th id="lower" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">lower</th>
+<th id="upper" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">upper</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd gt_group_heading_row">
+<td colspan="5" id="Organ Rejection" class="gt_group_heading" data-quarto-table-cell-role="th" scope="colgroup">Organ Rejection</td>
+</tr>
+<tr class="even gt_row_group_first">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.63</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.30</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.14</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0530</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.95</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.92</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">0.98</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.5232</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.72</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.28</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.43</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0777</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.02</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.43</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.91</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.1247</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Scale</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.01</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.00</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">0.05</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)"><br>
+</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Shape</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.50</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.38</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">0.63</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)"><br>
+</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="results-bayesian-jeong-fine-model-2" class="slide level2" style="font-size:60%;">
+<h2>7. Results: Bayesian Jeong-Fine model</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Bayesian Jeong-Fine failures plot (Equivalence: KMG01)</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="do">### Jeong-Fine failures plot ####</span></span>
+<span id="cb13-2"><a></a><span class="co"># (Equivalence: KMG01)</span></span>
+<span id="cb13-3"><a></a></span>
+<span id="cb13-4"><a></a><span class="co"># load ADR?</span></span>
+<span id="cb13-5"><a></a>Fij_MC <span class="ot">=</span> <span class="fu">readRDS</span>( </span>
+<span id="cb13-6"><a></a>  <span class="fu">file.path</span>( </span>
+<span id="cb13-7"><a></a>    <span class="fu">here</span>(),</span>
+<span id="cb13-8"><a></a>    <span class="st">'results'</span>,</span>
+<span id="cb13-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_JF_cumincMC.RDS'</span> ) ) )</span>
+<span id="cb13-10"><a></a></span>
+<span id="cb13-11"><a></a>Fij_I <span class="ot">=</span> <span class="fu">readRDS</span>( </span>
+<span id="cb13-12"><a></a>  <span class="fu">file.path</span>( </span>
+<span id="cb13-13"><a></a>    <span class="fu">here</span>(),</span>
+<span id="cb13-14"><a></a>    <span class="st">'results'</span>,</span>
+<span id="cb13-15"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_JF_cumincI.RDS'</span>) ) )</span>
+<span id="cb13-16"><a></a></span>
+<span id="cb13-17"><a></a>t <span class="ot">=</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">max</span>(ds<span class="sc">$</span>time), <span class="at">by=</span><span class="dv">3</span>)</span>
+<span id="cb13-18"><a></a></span>
+<span id="cb13-19"><a></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb13-20"><a></a><span class="cf">for</span>( j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span> ){</span>
+<span id="cb13-21"><a></a>  idx <span class="ot">=</span> <span class="fu">str_detect</span>( Fij_MC<span class="sc">$</span>variable, <span class="fu">paste0</span>(j,<span class="st">'[:punct:]$'</span>) )</span>
+<span id="cb13-22"><a></a>  <span class="fu">plot</span>( t, Fij_I<span class="sc">$</span>mean[idx], <span class="at">type=</span><span class="st">'l'</span>, <span class="at">lwd=</span><span class="dv">4</span>, <span class="at">lty=</span><span class="dv">1</span>, <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.15</span>),</span>
+<span id="cb13-23"><a></a>        <span class="at">ylab =</span> <span class="st">"Cumulative incidence"</span> ,</span>
+<span id="cb13-24"><a></a>        <span class="at">xlab =</span> <span class="st">"Time"</span> )</span>
+<span id="cb13-25"><a></a>  <span class="fu">lines</span>( t, Fij_MC<span class="sc">$</span>mean[idx], <span class="at">col=</span><span class="st">'red'</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb13-26"><a></a>  <span class="fu">legend</span>( <span class="st">'topleft'</span>, <span class="at">bty=</span><span class="st">'n'</span>, <span class="at">col=</span><span class="fu">c</span>(<span class="st">'white'</span>,<span class="st">'black'</span>,<span class="st">'red'</span>), <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>),</span>
+<span id="cb13-27"><a></a>          <span class="at">legend=</span><span class="fu">c</span>( <span class="fu">paste0</span>(<span class="st">'P(C='</span>,j,<span class="st">') = '</span>, <span class="fu">round</span>( <span class="fu">tail</span>(Fij_I<span class="sc">$</span>mean[idx], <span class="dv">1</span>), <span class="dv">2</span>) ),</span>
+<span id="cb13-28"><a></a>                    <span class="st">'Double Exponential Quadrature'</span>, </span>
+<span id="cb13-29"><a></a>                    <span class="st">'Monte Carlo approx'</span>) )</span>
+<span id="cb13-30"><a></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+
+</div>
+<img data-src="Competing-Risks-in-Liver-Transplantation_files/figure-revealjs/unnamed-chunk-9-1.png" width="960" class="r-stretch"></section>
+<section id="validation-and-regulatory-aligment" class="slide level2" style="font-size:60%;">
+<h2>8. Validation and regulatory aligment</h2>
+<p>Per the <strong>FDA Draft Guidance on Bayesian Methodology</strong> <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span>, utilizing the Jeong-Fine model <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> requires the creation of two core documents:</p>
 <div>
 <ul>
 <li class="fragment">A detailed Bayesian analysis plan (BAP)</li>
@@ -922,41 +3008,28 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
           display:block!important;
       }</style></aside>
 </section>
-<section id="results-data" class="slide level2" style="font-size:64%;">
-<h2>8. Results: data</h2>
-<p>build a demographic table with summarize_vars(), for age and disease</p>
-</section>
-<section id="results-frequentist-fg-model" class="slide level2" style="font-size:64%;">
-<h2>8. Results: frequentist F&amp;G model</h2>
-</section>
-<section id="results-bayesian-fg-model" class="slide level2" style="font-size:64%;">
-<h2>8. Results: Bayesian F&amp;G model</h2>
-</section>
-<section id="results-bayesian-jf-model" class="slide level2" style="font-size:64%;">
-<h2>8. Results: Bayesian J&amp;F model</h2>
-</section>
-<section id="cdisc-standards-and-traceability" class="slide level2" style="font-size:64%;">
-<h2>9. CDISC Standards and traceability</h2>
-<p>This example used a pre-processed dataset. However, the standard clinical trial workflow would involve a rigorous data pipeline to ensure traceability and regulatory compliance.</p>
+<section id="cdisc-workflow-and-traceability" class="slide level2" style="font-size:60%;">
+<h2>9. CDISC workflow and traceability</h2>
+<p>While this example utilized pre-processed data, a regulatory-grade workflow requires a rigorous CDISC-compliant pipeline to ensure end-to-end traceability.</p>
 <div class="fragment">
-<p>Some steps “missing” for the example workflow include:</p>
+<p>Key “missing” steps from this analysis include:</p>
 <div>
-<ul>
-<li class="fragment">Mapping raw source data to formal SDTM domains,</li>
-<li class="fragment">Cleaning and validating SDTM inputs to ensure data integrity,</li>
-<li class="fragment">Deriving the ADaM ADSL dataset,</li>
-<li class="fragment">Deriving the ADaM ADTTE dataset,</li>
-<li class="fragment">Producing Tables, Listings, and Graphs/Figures (TLGs/TLFs)</li>
+<ol type="1">
+<li class="fragment"><strong>SDTM Mapping:</strong> Converting raw CRF and EDC data into standardized domains.</li>
+<li class="fragment"><strong>ADaM Derivation:</strong> Building Analysis Data Models (ADSL, ADTTE).</li>
+<li class="fragment"><strong>ARS/ARD Derivation:</strong> Capturing analysis results and metadata in a machine-readable format.</li>
+<li class="fragment"><strong>TLG/TLF Production:</strong> Generating (additional) validated Tables, Listings, and Graphs/Figures from ARD.</li>
 <li class="fragment">and more</li>
-</ul>
+</ol>
 </div>
 </div>
 <aside class="notes">
-<ul>
-<li><p><u>Mapping raw source data to formal SDTM domains</u>, for this purpose I would use the <code>sdtm.oak</code> package <span class="citation" data-cites="Ganapathy_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">14</a>]</span></p></li>
-<li><p><u>Cleaning and validating SDTM inputs to ensure data integrity</u>, like the <strong>DS</strong> (Disposition) and <strong>RS</strong> (Response) domains.</p></li>
-<li><p><u>Deriving the ADaM ADTTE dataset</u>, for this purpose I would use the <code>admiral</code> package <span class="citation" data-cites="Straub_et_al_2026">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span>, distinguishing between ‘censored’, ‘target event’ and ‘competing event’.</p></li>
-</ul>
+<ol type="1">
+<li><p><u>SDTM Mapping:</u>: Mapping raw data to domains like DM (Demographics), DS (Disposition), and CE (Clinical Events). For modern R-based mapping, the <code>sdtm.oak</code> package <span class="citation" data-cites="Ganapathy_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">16</a>]</span> provides a framework for modular, reusable mapping scripts.</p></li>
+<li><p><u>ADaM Derivation:</u>: Using the <code>admiral</code> package <span class="citation" data-cites="Straub_et_al_2026">[<a href="#/references" role="doc-biblioref" onclick="">17</a>]</span> to handle complex censoring logic for competing risks, distinguishing between ‘target events’, ‘competing events’, and ‘right-censoring’.</p></li>
+<li><p><u>ARS/ARD Derivation:</u> <strong>Analysis Results Standard (ARS)</strong> with its <strong>Analysis Results Data (ARD)</strong> is a standardized intermediate layer between ADaM and the final output, facilitating automation, reproducibility, and traceability.</p></li>
+<li><p><u>TLG/TLF Production:</u>: Regulatory-grade displays produced using the <code>NEST</code> suite (<code>rtables</code>, <code>tern</code>, <code>teal</code>). By consuming standardized ARD, the process becomes “metadata-driven,” ensuring the final output is programmatically linked to the underlying ADaM for auditability.</p></li>
+</ol>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -969,15 +3042,15 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
           display:block!important;
       }</style></aside>
 </section>
-<section id="business-value-for-medpace" class="slide level2" style="font-size:64%;">
+<section id="business-value-for-medpace" class="slide level2" style="font-size:60%;">
 <h2>10. Business value for Medpace</h2>
 <p>Implementing advanced Bayesian models differentiates <strong>Medpace</strong> as a high-tier technical partner, ready to propose complex designs under the <a href="https://www.fda.gov/drugs/development-resources/complex-innovative-trial-design-meeting-program">FDA Complex Innovative Trial Design (CID) program</a></p>
-<p>Specifically, the Bayesian J&amp;F model provides:</p>
+<p>Specifically, the Bayesian Jeong-Fine model provides:</p>
 <div>
 <ol type="1">
 <li class="fragment">Direct interpretability for clinicians and regulatory bodies,</li>
-<li class="fragment">Integrated handling of missing data <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span></li>
-<li class="fragment">Efficiency via information borrowing <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span></li>
+<li class="fragment">Integrated handling of missing data <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span></li>
+<li class="fragment">Efficiency via information borrowing <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span></li>
 <li class="fragment">Stable extrapolation and prediction capabilities</li>
 <li class="fragment">Robustness in small-sample settings</li>
 </ol>
@@ -1031,7 +3104,7 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
 <section id="questions" class="slide level2 center-xy">
 <h2>Questions?</h2>
 </section>
-<section id="references" class="slide level2 smaller scrollable" style="font-size:80%;">
+<section id="references" class="slide level2 smaller scrollable" style="font-size:60%;">
 <h2>References</h2>
 <div id="refs" class="references csl-bib-body" style="font-size:80%;" role="list">
 <div id="ref-ICH_E9_R1_2019" class="csl-entry" role="listitem">
@@ -1061,30 +3134,36 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
 <div id="ref-Therneau_2026" class="csl-entry" role="listitem">
 <div class="csl-left-margin">9. </div><div class="csl-right-inline">Therneau TM (2026) <a href="https://CRAN.R-project.org/package=survival">A package for survival analysis in r</a></div>
 </div>
+<div id="ref-Ezzatabadipour_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">10. </div><div class="csl-right-inline">Ezzatabadipour H (2025) <a href="https://CRAN.R-project.org/package=cmpp">Cmpp: Direct parametric inference for the cumulative incidence function in competing risks</a></div>
+</div>
 <div id="ref-Stan_2026a" class="csl-entry" role="listitem">
-<div class="csl-left-margin">10. </div><div class="csl-right-inline">Stan Development Team. (2026) <a href="https://mc-stan.org">Stan userś guide, version 2.38.0</a>. Vienna, Austria</div>
+<div class="csl-left-margin">11. </div><div class="csl-right-inline">Stan Development Team. (2026) <a href="https://mc-stan.org">Stan userś guide, version 2.38.0</a>. Vienna, Austria</div>
 </div>
 <div id="ref-Stan_2026b" class="csl-entry" role="listitem">
-<div class="csl-left-margin">11. </div><div class="csl-right-inline">Stan Development Team. (2026) <a href="https://mc-stan.org">Stan reference manual, version 2.38.0</a>. Vienna, Austria</div>
+<div class="csl-left-margin">12. </div><div class="csl-right-inline">Stan Development Team. (2026) <a href="https://mc-stan.org">Stan reference manual, version 2.38.0</a>. Vienna, Austria</div>
 </div>
 <div id="ref-Gabry_et_al_2025b" class="csl-entry" role="listitem">
-<div class="csl-left-margin">12. </div><div class="csl-right-inline">Gabry J, C̆es̆novar R, Johnson A, Bronder S (2025) <a href="https://mc-stan.org/cmdstanr/">Cmdstanr: R interface to ’CmdStan’</a></div>
+<div class="csl-left-margin">13. </div><div class="csl-right-inline">Gabry J, C̆es̆novar R, Johnson A, Bronder S (2025) <a href="https://mc-stan.org/cmdstanr/">Cmdstanr: R interface to ’CmdStan’</a></div>
+</div>
+<div id="ref-Sjoberg_et_al_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">14. </div><div class="csl-right-inline">Sjoberg DD, Fei T (2025) <a href="https://mskcc-epi-bio.github.io/tidycmprsk/">Tidycmprsk: Competing risks estimation</a></div>
 </div>
 <div id="ref-FDA_Bayesian_2026" class="csl-entry" role="listitem">
-<div class="csl-left-margin">13. </div><div class="csl-right-inline">DHS, FDA, CDER, CBER (2026) <a href="https://www.fda.gov/media/190505/download">Use of bayesian methodology in clinical trials of drug and biological products, draft guidance for industry</a>. 1–29</div>
+<div class="csl-left-margin">15. </div><div class="csl-right-inline">DHS, FDA, CDER, CBER (2026) <a href="https://www.fda.gov/media/190505/download">Use of bayesian methodology in clinical trials of drug and biological products, draft guidance for industry</a>. 1–29</div>
 </div>
 <div id="ref-Ganapathy_et_al_2025" class="csl-entry" role="listitem">
-<div class="csl-left-margin">14. </div><div class="csl-right-inline">Ganapathy R, Forys A, Manukyan E, et al (2025) <a href="https://pharmaverse.github.io/sdtm.oak/">Sdtm.oak: SDTM data transformation engine</a></div>
+<div class="csl-left-margin">16. </div><div class="csl-right-inline">Ganapathy R, Forys A, Manukyan E, et al (2025) <a href="https://pharmaverse.github.io/sdtm.oak/">Sdtm.oak: SDTM data transformation engine</a></div>
 </div>
 <div id="ref-Straub_et_al_2026" class="csl-entry" role="listitem">
-<div class="csl-left-margin">15. </div><div class="csl-right-inline">Straub B, Bundfuss S, Bearham M, et al (2026) <a href="https://pharmaverse.github.io/admiral/">Admiral: ADaM in r asset library</a></div>
+<div class="csl-left-margin">17. </div><div class="csl-right-inline">Straub B, Bundfuss S, Bearham M, et al (2026) <a href="https://pharmaverse.github.io/admiral/">Admiral: ADaM in r asset library</a></div>
 </div>
 </div>
 
 <div class="quarto-auto-generated-content">
 <p><img src="figures/medpace_logo.png" class="slide-logo"></p>
 <div class="footer footer-default">
-<p>Biostatistics presentation | Jose Manuel Rivera Espejo</p>
+<p>Competing Risks, a Bayesian parametric alternative | Jose Manuel Rivera Espejo | <a href="https://github.com/jriveraespejo/presentation_medpace.git">Github Repository</a></p>
 </div>
 </div>
 </section>
@@ -1300,6 +3379,44 @@ log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \d
         ]
       });
     </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
       const toggleBodyColorMode = (bsSheetEl) => {

@@ -1,6 +1,6 @@
 ---
 title: "Competing Risks in Liver Transplantation"
-subtitle: "A Bayesian implementation of the Jeong-Fine model"
+subtitle: "A Bayesian parametric alternative, the Jeong-Fine model"
 author: "Jose Manuel Rivera Espejo"
 date: last-modified
 date-format: "DD MMMM YYYY"
@@ -14,25 +14,25 @@ include-in-header:
       </style>
 ---
 
-## The contents {style="font-size:64%;"}
+## The contents {style="font-size:60%;"}
 
 1. Motivating example
 2. Clinical conflict
 3. Handling competing risks
-4. Methodological Split
-5. Software implementation 
-6. Technical depth
-7. Validation and regulatory aligment
-8. Results
-9. CDISC standards and traceability
+4. Model definition
+5. Software landscape 
+6. Bayesian implementation
+7. Results
+8. Validation and regulatory aligment
+9. CDISC workflow and traceability
 10. Business value for Medpace
 
 
 ---
 
-## 1. Motivating example {style="font-size:64%;"}
+## 1. Motivating example {style="font-size:60%;"}
 
-Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplant study modified from Collett [@Collett_2023] can be defined as: 
+Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplant case study should define at least the following attributes:
 
 ::: incremental 
 1. **Population:** adult elective transplant recipients from a deceased donor.
@@ -64,6 +64,8 @@ Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplan
 :::
 
 ::: {.notes}
+**Note:** example is based on a case study from Collett [@Collett_2023], but the specific data are illustrative and not identical to the original source.
+
 **primary liver diseases** include
 - primary biliary cirrhosis (PBC) 
 - primary sclerosing cholangitis (PSC) and
@@ -77,80 +79,78 @@ Consistent with the **Estimands framework** [@ICH_E9_R1_2019], a liver transplan
 
 --- 
 
-## 2. Clinical conflict {style="font-size:64%;"}
+## 2. Clinical conflict {style="font-size:60%;"}
+
+Different graft failures (competing risks) can preclude the occurrence of failure from OR (primary endpoint), effectively affecting its existence or interpretation [@ICH_E9_R1_2019; @Collett_2023].
 
 ::: incremental 
-* **Reality:** 
-  
-    Competing risks preclude the occurrence of the primary endpoint [@Collett_2023], effectively affecting its existence or interpretation [@ICH_E9_R1_2019].
-
 * **Naive estimator:** 
 
-    can we simply treat them as censored? Approach taken by the standard Kaplan-Meier (1-KM) model.
+   Can we simply treat competing risks as censored? That is the approach of the naive Kaplan-Meier (KM) estimator
 
-* **Estimation problem:** 
+* **Estimation problem:**
 
-    "Censoring" competing risks causes the 1-KM model to overestimate the cumulative incidence of the event of interest [@Collett_2023].
+    "Censoring" competing risks causes the naive KM estimator to overestimate the cumulative incidence of the event of interest [@Collett_2023].
 
 * **Estimand definition:** 
 
     "The 1-KM estimate is the probability of (failing) beyond time $t$, if cause $j$ is the only cause of (failure), that is if all other risks were removed." [@Collett_2023; @Hernan_et_al_2025]
+:::
 
-* **Question:** 
-
-    How to ensure an unbiased, efficient estimate of the summary measure?
+::: {.fragment}
+**Question:** How to ensure an unbiased, efficient estimate of the summary measure?
 :::
 
 
-
 ::: {.notes}
-
-* **Reality:** Different graft failures [compete]{.underline} to be the observed time-to-event endpoint.
-
 * **Estimand definition:** "the analysis is effectively an attempt to simulate a population in which (failure) from other causes is somehow either abolished or rendered independent of the risk factors for (the event of interest). The resulting effect estimate is hard to interpret and may not correspond to a meaningful estimand" [@Hernan_et_al_2025]
 :::
 
 
 ---
 
-## 3. Handling competing risks {style="font-size:64%;"}
+## 3. Handling competing risks {style="font-size:60%;"}
 
-Consistent with the **strategies for addressing intercurrent events** [@ICH_E9_R1_2019], an alternative to the **hypothetical strategy** (targeted by 1-KM estimator) is to:
+Consistent with the **strategies for addressing intercurrent events** [@ICH_E9_R1_2019], alternatives to the **hypothetical strategy** (targeted by naive KM estimator) include:
 
 ::: incremental 
 * **Create a single composite event**, 
 
-    e.g., any cause of graft failure is considered an event. This changes the question/estimand [@Hernan_et_al_2025].
+    e.g., any cause of graft failure is considered an event. 
 
 * **Restricting inference to the principal stratum**, 
 
-    e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment. This needs a "challenging" counterfactual [@Hernan_et_al_2025].
+    e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment.
 
 * **Apply the treatment policy strategy**. 
 
-    In this case it may lead to clinically nonsensical scenarios, e.g., consider the "re-transplant" problem.
+    e.g., follow patients and record failure from OR regardless of competing risks (the "re-transplant" problem).
 
-* **Follow a while-on-treatment strategy**, 
+* **Follow a while-alive strategy**, 
 
-    e.g., consider the "re-transplant" problem again. [This is what the Fine-Gray [F&G, @Fine_et_al_1999] and Jeong-Fine [J&F, @Jeong_et_al_2006; @Jeong_et_al_2007] estimators attempt to model.]{.fragment}
+    e.g., assess failure from OR while the patient has not yet experienced a competing risk. 
+:::
+
+::: {.fragment}
+The Fine-Gray [@Fine_et_al_1999] and Jeong-Fine [@Jeong_et_al_2006; @Jeong_et_al_2007] estimators target the **while-alive strategy**, modeling the cumulative incidence while subjects remain "at risk" for the primary event.
 :::
 
 ::: {.notes}
-* **Create a single composite event**, eliminates the competing events, but fundamentally changes the causal question (estimand) [@Hernan_et_al_2025]
+* **Create a single composite event**, eliminates competing events, but changes the causal question/estimand [@Hernan_et_al_2025]
 
-* **Restricting inference to the principal stratum**, This approach targets a specific subpopulation effect (e.g., the local average effect or LATE), which makes both interpretation and valid estimation especially challenging [@Hernan_et_al_2025].
+* **Restricting inference to the principal stratum**, targets a specific subpopulation effect (e.g., LATE), which requires to "build" a challenging counterfactual, affecting interpretation and valid estimation [@Hernan_et_al_2025].
 
-* **Apply the treatment policy strategy**. e.g., the "re-transplant" problem: if a patient receives a second transplant due to early HAT, and the second liver is rejected due to OR, the strategy could attribute this rejection to the first liver's treatment, because the strategy requires that you follow the patient until you see the event of interest.
+* **Apply the treatment policy strategy**. e.g., the "re-transplant" problem: if a patient receives a second transplant due to early HAT, and the second liver is rejected due to OR, the strategy could attribute this rejection to the first liver's treatment, because the strategy requires that you follow the patient until you see the event of interest (This is clinically nonsensical).
 
 * **Follow a while-on-treatment strategy**, e.g., in the "re-transplant" problem, if a patient receives a second transplant due to early HAT, the strategy would evaluate the risk of graft failure due to OR only while the patient still has their first graft, "stopping the clock" at the moment of re-transplant.
 :::
 
 ---
 
-## 4. Methodological Split: The F&G model {style="font-size:64%;"}
+## 4. Model definition: The Fine-Gray model {style="font-size:60%;"}
 
 ::: {.fragment}
-The F&G model [@Fine_et_al_1999] defines "the instantaneous event rate at time $t$ from cause $j$, given that an individual has not previously died from cause $j$" as
+The cause-specific subdistribution hazard function is defined as, 
 
 $$ 
 h_{j}(t) = \lim_{\delta t \rightarrow 0} \left[ \frac{P(t \leq T \leq t+\delta t, C=j) | \{ T \geq t \} \; \text{or} \; \{ T \leq t \; and \; C \neq j\}}{ \delta t } \right]
@@ -158,42 +158,44 @@ $$ {#eq-FandG_p}
 :::
 
 ::: {.fragment}
-where a [Proportional Hazard Cox model]{.underline} is assumed for the **subdistribution hazard function of cause $j$ at time $t$ for individual $i$**,
+To incorporate the influence of covariates, we assume a proportional subdistribution hazards model,
 
 $$
-h_{ij}(t) = exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) h_{0j}(t)
+h_{ij}(t,\boldsymbol{\beta}) = exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) \; h_{0j}(t)
 $$ {#eq-FandG_hij}
 :::
 
 ::: {.fragment}
-which results in a partial likelihood function for all $m$ causes as,
+Leaving the baseline hazard $h_{0j}(t)$ **unspecified**, the parameters are estimated by maximizing the partial likelihood function for $m$ causes:
 
 $$
-L(\boldsymbol{\beta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} \frac{ exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) }{ \sum_{l \in R(t_{(h)})} w_{hl} exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} ) } 
+L(\boldsymbol{\beta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} \frac{ exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) }{ \sum_{l \in R(t_{(h)})} w_{hl} \; exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} ) } 
 $$ {#eq-FandG_L}
 :::
 
 ::: {.fragment}
-The model is best interpreted in terms of the effects of explanatory variables on the **cause-specific cumulative incidence function of the $j$th cause**,
+The model is best interpreted in terms of the effects of explanatory variables on the cause-specific cumulative incidence function,
 
 $$
-F_{ij}(t) = 1 - exp \left[ -exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) H_{0j}(t) \right]
+F_{ij}(t,\boldsymbol{\beta}) = 1 - exp \left[ -exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) H_{0j}(t) \right]
 $$ {#eq-FandG_Hij}
 
 where the baseline cumulative subdistribution hazard function, $H_{0j}(t)$, is estimated using the Nelson-Aalen estimate [@Collett_2023].
 :::
 
 ::: {.notes}
-The F&G model [@Fine_et_al_1999] is the [industry standard]{.underline}, but it utilizes a **risk set that is not straightforward to interpret**: it continues to include subjects who have experienced a competing event as if they were still at risk for other competing events.
+$h_{j}(t)$ is "the instantaneous event rate at time $t$ from cause $j$, given that an individual has not previously died from cause $j$" [@Collett_2023]
+
+The F&G model is the [industry standard]{.underline}, but it utilizes a **risk set that is not straightforward to interpret**: it continues to include subjects who have experienced a competing event as if they were still at risk for other competing events.
 :::
 
 
 ---
 
-## 4. Methodological Split: The J&F model {style="font-size:64%;"}
+## 4. Model definition: The Jeong-Fine model {style="font-size:60%;"}
 
 ::: {.fragment}
-In contrast, the J&F model [@Jeong_et_al_2006; @Jeong_et_al_2007] has a simpler definition for "the instantaneous event rate at time $t$ from cause $j$, in the presence of all other risks"
+The cause-specific subdistribution hazard function is defined as, 
 
 $$ 
 h_{j}(t) = \lim_{\delta t \rightarrow 0} \left[ \frac{P(t \leq T \leq t+\delta t, C=j) | T \geq t }{ \delta t } \right]
@@ -201,24 +203,36 @@ $$ {#eq-JandF_p}
 :::
 
 ::: {.fragment}
-but a [Parametric Model]{.underline} is assumed for the **subdistribution hazard function of cause $j$ at time $t$ for individual $i$**, $h_{ij}(t, \boldsymbol{\theta})$, resulting in a likelihood function for all $m$ causes as,
+To incorporate the influence of covariates, we also assume a proportional subdistribution hazards model. Unlike Fine-Gray, we assume a **parametric form** for baseline hazard (e.g., Weibull):
 
 $$
-L(\boldsymbol{\beta},\boldsymbol{\theta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} h_{ij}(t, \boldsymbol{\theta})^{\delta_{ij}} \; exp[ -H_{ij}(t, \boldsymbol{\theta}) ]
+\begin{aligned}
+h_{ij}(t, \boldsymbol{\beta}, \boldsymbol{\theta}) &= exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) \; h_{0j}(t, \boldsymbol{\theta}) \\
+&= exp( \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} ) \; \lambda \gamma t^{\gamma-1}
+\end{aligned}
+$$ {#eq-JandF_hij}
+:::
+
+::: {.fragment}
+The parameters are estimated by maximizing the full likelihood function for $m$ causes,
+
+$$
+L(\boldsymbol{\beta},\boldsymbol{\theta}) = \prod_{j=1}^{m} \prod_{i=1}^{n} h_{ij}(t,\boldsymbol{\beta}, \boldsymbol{\theta})^{\delta_{ij}} \; exp[ -H_{ij}(t,\boldsymbol{\beta}, \boldsymbol{\theta}) ]
 $$ {#eq-JandF_L}
 
 :::
 
 ::: {.fragment}
-Similarly, the model is interpreted in terms of the effects of explanatory variables on the **cause-specific cumulative incidence function of the $j$th cause**,
+Similarly, the model is best interpreted in terms of the effects of covariates on the cause-specific cumulative incidence function,
 
 $$
-F_{ij}(t) = \int_{0}^{t} f_{ij}(u) \; du = \int_{0}^{t} h_{ij}(u) \; S(u) \; du
+F_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) = \int_{0}^{t} f_{ij}(u,\boldsymbol{\beta},\boldsymbol{\theta}) \; du = \int_{0}^{t} h_{ij}(u,\boldsymbol{\beta},\boldsymbol{\theta}) \; S(u,\boldsymbol{\beta},\boldsymbol{\theta}) \; du
 $$ {#eq-FandG_Hij}
 :::
 
-
 ::: {.notes}
+$h_{j}(t)$ is "the instantaneous event rate at time $t$ from cause $j$, given that an individual has not experineces any event at time $t$" [@Collett_2023; @Jeong_et_al_2006]
+
 **Benefit:** interpretable risk set.
 
 **Drawback:** $F_{ij}(t)$ usually requires numerical integration
@@ -226,18 +240,17 @@ $$ {#eq-FandG_Hij}
 
 ---
 
-## 5. Software implementation {style="font-size:64%;"}
+## 5. Software landscape {style="font-size:60%;"}
 
 The following tools are available for model estimation:
 
 ::: incremental
-- The frequentist estimation of the F&G model [@Fine_et_al_1999], is accessible via the `cmprsk` package [@Gray_2024] or `finegray` function within the `survival` package [@Therneau_et_al_2000; @Therneau_2026].
-
-- ... but the J&F model [@Jeong_et_al_2006; @Jeong_et_al_2007] lacks a dedicated "out-of-the-box" frequentist package. 
+- **Fine-Gray:** well-supported frequentist implementation via the `cmprsk` package [@Gray_2024]. The `survival` package [@Therneau_et_al_2000; @Therneau_2026] also provides the `finegray` function.
+- **Jeong-Fine:** Lacks a long-standing, stable frequentist implementation; however, the `cmpp` package [@Ezzatabadipour_2025] (currently in development phase) provides an option.
 :::
 
 ::: {.fragment}
-However, **Bayesian** versions of both models can be implemented via `Stan` [@Stan_2026a; @Stan_2026b] using the `cmdstanr` interface package [@Gabry_et_al_2025b].  
+Nevertheless, by leveraging `Stan` [@Stan_2026a; @Stan_2026b] via the `cmdstanr` package [@Gabry_et_al_2025b], we can implement both models within a **Bayesian** framework.
 :::
 
 ::: {.fragment}
@@ -265,9 +278,9 @@ Drawbacks:
 :::
 
 ::: {.notes}
+Robust and flexible alternative to the missing frequentist implementation
 
 Benefits:
-
 - Allows the definition of [custom likelihoods]{.underline} not natively available in standard packages.
 - Provides a posterior distribution that propagates all parameter [uncertainty]{.underline}.
 - [Does not rely on asymptotic theory]{.underline}, making it more robust in small-sample scenarios.
@@ -281,9 +294,9 @@ Drawbacks:
 
 ---
 
-## 6. Technical depth: The F&G model, Cox partial likelihood {style="font-size:64%;"}
+## 6. Bayesian implementation: The Fine-Gray model {style="font-size:60%;"}
 
-The log-likelihood for @eq-FandG_L is,
+The partial log-likelihood for @eq-FandG_L is,
 
 $$
 \log L(\boldsymbol{\beta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \boldsymbol{\beta_{j}'} \boldsymbol{x_{i}} \; \cdot \log \left\{ \sum_{l \in R(t_{(h)})} exp \left[ \log(w_{hl}) + \boldsymbol{\beta_{j}'} \boldsymbol{x_{l}} \right] \right\} 
@@ -299,7 +312,7 @@ data {
   int<lower=0> q; // num covariates
   vector[n] t;    // time
   matrix[n,m] s;  // cause of failure
-  matrix[n,q] x;  // covariates
+  matrix[n,q] X;  // covariates
   vector[n] w;    // weights
 }
 parameters {
@@ -307,11 +320,12 @@ parameters {
 }
 model {
   // priors
-  to_vector(beta) ~ normal(0, 2);
+  to_vector(beta) ~ normal(0,2);
   
   // risk score
-  matrix[n,m] rs = x*beta;
+  matrix[n,m] rs = X*beta;
   
+  // partial log-likelihood
   for( j in 1:m ){
     for( i in 1:n ) {
       if( s[i,j]==1 ){
@@ -325,12 +339,12 @@ model {
 
 ---
 
-## 6. Technical depth: the J&F model, Weibull baseline hazard {style="font-size:64%;"}
+## 6. Bayesian implementation: The Jeong-Fine model {style="font-size:60%;"}
 
-The log-likelihood for @eq-JandF_L is,
+The full log-likelihood for @eq-JandF_L is,
 
 $$
-log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \delta_{ij} \cdot log \; h_{ij}(t,\boldsymbol{\theta}) - H_{ij}(t,\boldsymbol{\theta}) 
+\log L(\boldsymbol{\beta},\boldsymbol{\theta}) = \sum_{j=1}^{m} \sum_{i=1}^{n} \delta_{ij} \cdot \log h_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) - H_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) 
 $$ {#eq-JandF_logL}
 
 and the Bayesian model is defined as:
@@ -338,7 +352,6 @@ and the Bayesian model is defined as:
 ```{{r}}
 StanModel = "
 functions{
-  // Based on Jeong et al (2006) Equations (9), (10), and (13)
   // cause-specific log hazard function
   real log_hij( real t, real rs, real lambda, real gamma ){
     return( rs + log(lambda) + log(gamma) + (gamma-1)*log(t) );
@@ -383,8 +396,8 @@ data {
   // For Marginal Approximation
   int<lower=1> ms;      // Number of Monte Carlo draws (e.g., 100)
   int<lower=0> ns;      // number of time samples
-  vector[ns] ts;        // time samples
-  matrix[1,q] xs;       // covariates for simulation
+  vector[ns] ts;         // time samples
+  matrix[1,q] XS;       // covariates for simulation
 }
 parameters {
   matrix[q,m] beta;           // beta[covariate,cause]
@@ -400,8 +413,7 @@ model {
   // risk score
   matrix[n,m] rs = X*beta;
   
-  // model
-  // Following Equation (12.9) from Collett (2023)
+  // log-likelihood
   for( j in 1:m ){
     for( i in 1:n ){
       target += s[i,j] * log_hij( t[i], rs[i,j], lambda[j], gamma[j] ) -
@@ -410,13 +422,13 @@ model {
   }
 }
 generated quantities {
-  matrix[ns,m] Fij_MC; // Cumulative Incidence Functions
+  matrix[ns,m] Fij_MC;
   matrix[ns,m] Fij_I;
   
   // risk score
-  vector[m] rs = to_vector(xs*beta);
+  vector[m] rs = to_vector(XS*beta);
   
-  // flatten all parameters into a single array 3*m = m(rs) + m(lambda) + m(gamma) 
+  // flatten parameters 
   array[3*m] real flat_theta;
   for (j in 1:m) {
     flat_theta[j] = rs[j];
@@ -426,15 +438,19 @@ generated quantities {
   
   for (i in 1:ns) {
     for (j in 1:m) {
-      // Integrate using Monte Carlo approximation
+    
+      // Monte Carlo integration
       real fij_sum = 0;
       for (k in 1:ms) {
         real u = uniform_rng(0, ts[i]);
         fij_sum += exp(log_fij(u, j, rs, lambda, gamma, m));
       }
       Fij_MC[i,j] = ts[i] * (fij_sum / ms); 
-      // Integrate using Double Exponential Quadrature
+      // Fij = t[i] * p(t[i])
+      
+      // Double Exponential Quadrature integration
       Fij_I[i,j] = integrate_1d( fij, 0.0, ts[i], flat_theta, {0.0}, {j,m} );
+      
     }
   }
 }
@@ -443,9 +459,501 @@ generated quantities {
 
 ---
 
-## 7. Validation and regulatory aligment {style="font-size:64%;"}
+## 7. Results: Data description {style="font-size:60%;"}
 
-Per the **FDA Draft Guidance on Bayesian Methodology** [@FDA_Bayesian_2026], utilizing the J&F model [@Jeong_et_al_2006; @Jeong_et_al_2007] requires the creation of two core documents: 
+```{r}
+#| echo: true
+#| output: false
+#| code-fold: true
+#| code-summary: "Set environment"
+
+# working environment ####
+
+# cleaning R start
+rm(list=ls()); gc()
+
+# loading libraries
+libraries = c( 
+  # general purpose
+  'here','tidyverse','rtables','gt','cowplot',
+  
+  # frequentist implementations
+  'survival','cmprsk','tidycmprsk','ggsurvfit',
+  
+  # Bayesian implementations
+  'cmdstanr', 'coda','posterior','bayesplot'
+) 
+sapply(libraries, require, character.only=T)
+
+```
+
+```{r}
+#| echo: true
+#| output: false
+#| code-fold: true
+#| code-summary: "Dataset load"
+
+# Source data ####
+
+# load data
+rd  = file.path( here(), 'data', 'liver transplant example.dat')
+ds = rd %>%
+  read.table( header=T )
+
+              
+# data structure
+# str(ds)
+# 
+# Note:
+#   patient: patient number
+#   age: age at baseline
+#   treatment: 1=Solution A, 2=Solution B
+#   disease: primary liver disease, 1=PBC, 2=PSC, 3=ALD
+#   time: time to cause of graft failure
+#   status: 1=event, 0=censored
+#   cof: cause of graft failure, 0=functioning graft, 1=rejection, 2=thrombosis, 3=recurrent disease, 4=other
+
+
+# convert to factor
+ds = ds %>%
+  mutate(
+    treatment_label = treatment,
+    disease_label = disease,
+    cof_label = cof ) %>%
+  mutate_at( 
+    .vars = vars(treatment_label), 
+    .funs = factor,
+    levels = 1:2, 
+    labels = c('Solution A','Solution B')
+  ) %>%
+  mutate(
+    treatment_label = 
+      fct_relevel( treatment_label, 
+                   c('Solution B','Solution A'))) %>%
+  mutate_at( 
+    .vars = vars(disease_label), 
+    .funs = factor,
+    levels = 1:3, 
+    labels = c('PBC','PSC','ALD') ) %>%
+  mutate(
+    disease_label = 
+      fct_relevel( disease_label, 
+                   c('ALD','PBC','PSC'))) %>%
+  mutate_at( 
+    .vars = vars(cof_label), 
+    .funs = factor,
+    levels = 0:4, 
+    labels = c('Functioning graft', 
+               'Organ Rejection', 
+               'Hepatic Artery Thrombosis', 
+               'Recurrent Disease', 
+               'Other') )
+
+```
+
+```{r}
+#| echo: true
+#| output: true
+#| code-fold: true
+#| code-summary: "Demographics table (DMT01)"
+
+## Demographics (DMT01) #####
+
+# calculation and formatting function
+f_summary = function(x) {
+  if ( is.numeric(x) ) {
+    in_rows(
+      "n" = rcell( sum(!is.na(x)), format = "xx"),
+      "Mean (SD)" = rcell( c(mean(x, na.rm=T), sd(x, na.rm=T)), format = "xx.x (xx.x)"),
+      "Median" = rcell( median(x, na.rm=T), format = "xx.x"),
+      "Min - Max" = rcell( range(x, na.rm=T), format = "xx.x - xx.x")
+    )
+  } else if ( is.factor(x) ) {
+    tab = c( table(x) )
+    do.call( 
+      in_rows, 
+      c( "n" = rcell( sum(tab), format = "xx" ),
+         lapply(tab, rcell, format = "xx" ) ) )
+  } else {
+    stop("type not supported")
+  }
+}
+
+# table
+basic_table( show_colcounts=T ) %>%
+  split_cols_by( 
+    var = "treatment_label",
+    ref_group = "Solution B") %>%
+  add_overall_col("All Patients") %>%
+  analyze( 
+    vars = c('age','disease_label'), 
+    afun = f_summary,
+    var_labels = c('Age (yr)','Liver Disease') 
+  ) %>%
+  build_table( df=ds )
+
+```
+
+---
+
+## 7. Results: Data description {style="font-size:60%;"}
+
+```{r}
+#| echo: true
+#| output: true
+#| code-fold: true
+#| code-summary: "Deaths table (DTHT01)"
+
+## Deaths (DTHT01) #####
+
+# calculation and formatting functions
+event_count = function(x, .N_col) {
+  tab = c( table(x) )
+  in_rows(
+    "Total number of events" = rcell( tab[2] * c(1, 1 / .N_col), format = "xx (xx.x%)" )
+  )
+}
+
+cof_count = function(x, .N_col) {
+  tab = c( table(x) )
+  tab = tab[ names(tab) != "Functioning graft" ]
+  do.call( 
+    in_rows, 
+    c( "n" = rcell( sum(tab), format = "xx" ),
+       lapply( 
+         tab,
+         function(xi){ rcell(xi * c(1, 1 / .N_col), format = "xx (xx.x%)") } 
+       ) ) )
+}
+
+
+# table
+basic_table( show_colcounts=T ) %>%
+  split_cols_by( 
+    var = "treatment_label", 
+    ref_group = "Solution B") %>%
+  add_overall_col("All Patients") %>%
+  analyze( 
+    vars = "status", 
+    afun = event_count, 
+    show_labels = "hidden" ) %>%
+  analyze( 
+    vars = "cof_label", 
+    afun = cof_count, 
+    var_labels = "Cause of graft failure", 
+    show_labels = "visible" ) %>%
+  build_table( df=ds )
+
+```
+
+::: {.notes}
+from [TLG Catalog](https://insightsengineering.github.io/tlg-catalog/stable/):
+- Table Demography `DMT01` 
+- Table Deaths `DTHT01` 
+:::
+
+---
+
+## 7. Results: Frequentist Fine-Gray model {style="font-size:60%;"}
+
+About the fitting process:
+
+::: incremental
+- It used the `cmprsk` package [@Gray_2024] and the tidy-wrapper `tidycmprsk` [@Sjoberg_et_al_2025].
+- It runs all causes in a second
+:::
+
+::: {.fragment}
+
+```{r}
+#| echo: true
+#| output: true
+#| code-overflow: wrap
+#| code-fold: true
+#| code-summary: "Fine-Gray regression (Equivalence: COXT01)"
+
+### Bayseian Fine-Gray regression ####
+# (Equivalence: COXT01) 
+
+# load ADR?
+hr_cof = readRDS( 
+  file.path( 
+    here(),
+    'results',
+    paste0('ARD_B_FG.RDS') ) )
+
+
+hr_cof %>%
+  select( 
+    'Effect/Covariate Included in the model', 
+    'Hazard ratio', 
+    lower, 
+    upper, 
+    'P(0.95< HR <1.1)', 
+    cof_label ) %>%
+  filter( cof_label == 'Organ Rejection' ) %>%
+  group_by( cof_label ) %>%
+  gt() %>%
+  tab_spanner(
+    label = "90% CI",
+    columns = c('lower','upper')
+  ) %>%
+  tab_spanner(
+    label = "Treatment effect adjusted for covariate",
+    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+  ) %>%
+  fmt_number( 
+    columns = 2:4,
+    decimal = 2
+  ) %>%
+  fmt_number( 
+    columns = 5,
+    decimal = 4
+  ) %>%
+  sub_missing( missing_text = " " )
+
+```
+
+:::
+
+
+::: {.notes}
+from [TLG Catalog](https://insightsengineering.github.io/tlg-catalog/stable/):
+- Table Efficacy `COXT01` 
+- Graphs Efficacy `KMG01`
+:::
+
+---
+
+## 7. Results: Frequentist Fine-Gray model {style="font-size:60%;"}
+
+::: {.fragment}
+
+```{r}
+#| echo: true
+#| output: true
+#| code-fold: true
+#| code-summary: "Fine-Gray failures plot (Equivalence: KMG01)"
+
+### Fine-Gray failures plot ####
+# (Equivalence: KMG01)
+
+# require(ggsurvfit)
+
+cof = c('Organ Rejection', 
+        'Hepatic Artery Thrombosis', 
+        'Recurrent Disease', 
+        'Other')
+
+for( j in 1:max(ds$cof) ){
+  assign( 
+    paste0('F', j),
+    cuminc( 
+      Surv(time, cof_label) ~ treatment_label, 
+      data = ds ) %>%
+      ggcuminc( outcome = cof[j] ) +
+      add_confidence_interval() +
+      add_risktable() +
+      scale_ggsurvfit( 
+        x_scales = list(breaks=seq(0,max(ds$time), by=500)),
+        y_scales = list(limits=c(0,0.15)) )
+  )
+}
+
+F1
+
+```
+
+:::
+
+---
+
+## 7. Results: Bayesian Fine-Gray model {style="font-size:60%;"}
+
+About the fitting process:
+
+::: incremental
+- It used `Stan` [@Stan_2026a; @Stan_2026b] via the `cmdstanr` package [@Gabry_et_al_2025b].
+- It runs all causes in $250-300$ seconds ($4.2-5$ minutes),
+- It produces healthy sampling chains
+:::
+
+::: {.fragment}
+
+```{r}
+#| echo: true
+#| output: true
+#| code-fold: true
+#| code-summary: "Bayesian Fine-Gray regression (Equivalence: COXT01)"
+
+### Fine-Gray regression ####
+# (Equivalence: COXT01) 
+
+# load ADR?
+hr_cof = readRDS( 
+  file.path( 
+    here(),
+    'results',
+    paste0('ARD_B_FG.RDS') ) )
+
+
+hr_cof %>%
+  select( 
+    'Effect/Covariate Included in the model', 
+    'Hazard ratio', 
+    lower, 
+    upper, 
+    'P(0.95< HR <1.1)', 
+    cof_label ) %>%
+  filter( cof_label == 'Organ Rejection' ) %>%
+  group_by( cof_label ) %>%
+  gt() %>%
+  tab_spanner(
+    label = "90% CI",
+    columns = c('lower','upper')
+  ) %>%
+  tab_spanner(
+    label = "Treatment effect adjusted for covariate",
+    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+  ) %>%
+  fmt_number( 
+    columns = 2:4,
+    decimal = 2
+  ) %>%
+  fmt_number( 
+    columns = 5,
+    decimal = 4
+  ) %>%
+  sub_missing( missing_text = " " )
+
+```
+
+:::
+
+::: {.notes}
+from [TLG Catalog](https://insightsengineering.github.io/tlg-catalog/stable/):
+- Table Efficacy `COXT01` 
+:::
+
+---
+
+## 7. Results: Bayesian Jeong-Fine model {style="font-size:60%;"}
+
+About the fitting process:
+
+::: incremental
+- It used `Stan` [@Stan_2026a; @Stan_2026b] via the `cmdstanr` package [@Gabry_et_al_2025b].
+- It runs all causes in $930-970$ seconds ($15.5-16.2$ minutes),
+- It produces healthy sampling chains,
+- ... but the order and reference level of some variables can lead to non-finite integrals
+:::
+
+::: {.notes}
+from [TLG Catalog](https://insightsengineering.github.io/tlg-catalog/stable/):
+- Table Efficacy `COXT01` 
+- Graphs Efficacy `KMG01`
+:::
+
+---
+
+## 7. Results: Bayesian Jeong-Fine model {style="font-size:60%;"}
+
+```{r}
+#| echo: true
+#| output: true
+#| code-fold: true
+#| code-summary: "Bayesian Jeong-Fine regression (Equivalence: COXT01)"
+
+### Jeong-Fine regression ####
+# (Equivalence: COXT01) 
+
+# load ADR?
+hr_cof = readRDS( 
+  file.path( 
+    here(),
+    'results',
+    paste0('ARD_B_JF.RDS') ) )
+
+
+hr_cof %>%
+  select( 
+    'Effect/Covariate Included in the model', 
+    'Hazard ratio', 
+    lower, 
+    upper, 
+    'P(0.95< HR <1.1)', 
+    cof_label ) %>%
+  filter( cof_label == 'Organ Rejection' ) %>%
+  group_by( cof_label ) %>%
+  gt() %>%
+  tab_spanner(
+    label = "90% CI",
+    columns = c('lower','upper')
+  ) %>%
+  tab_spanner(
+    label = "Treatment effect adjusted for covariate",
+    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+  ) %>%
+  fmt_number( 
+    columns = 2:4,
+    decimal = 2
+  ) %>%
+  fmt_number( 
+    columns = 5,
+    decimal = 4
+  ) %>%
+  sub_missing( missing_text = " " )
+
+```
+
+---
+
+## 7. Results: Bayesian Jeong-Fine model {style="font-size:60%;"}
+
+```{r}
+#| echo: true
+#| output: true
+#| code-fold: true
+#| code-summary: "Bayesian Jeong-Fine failures plot (Equivalence: KMG01)"
+
+### Jeong-Fine failures plot ####
+# (Equivalence: KMG01)
+
+# load ADR?
+Fij_MC = readRDS( 
+  file.path( 
+    here(),
+    'results',
+    paste0('ARD_B_JF_cumincMC.RDS' ) ) )
+
+Fij_I = readRDS( 
+  file.path( 
+    here(),
+    'results',
+    paste0('ARD_B_JF_cumincI.RDS') ) )
+
+t = seq(1, max(ds$time), by=3)
+
+par(mfrow=c(2,2))
+for( j in 1:4 ){
+  idx = str_detect( Fij_MC$variable, paste0(j,'[:punct:]$') )
+  plot( t, Fij_I$mean[idx], type='l', lwd=4, lty=1, ylim=c(0,0.15),
+        ylab = "Cumulative incidence" ,
+        xlab = "Time" )
+  lines( t, Fij_MC$mean[idx], col='red', lty=2)
+  legend( 'topleft', bty='n', col=c('white','black','red'), lty=c(1,1,2),
+          legend=c( paste0('P(C=',j,') = ', round( tail(Fij_I$mean[idx], 1), 2) ),
+                    'Double Exponential Quadrature', 
+                    'Monte Carlo approx') )
+}
+
+```
+
+---
+
+## 8. Validation and regulatory aligment {style="font-size:60%;"}
+
+Per the **FDA Draft Guidance on Bayesian Methodology** [@FDA_Bayesian_2026], utilizing the Jeong-Fine model [@Jeong_et_al_2006; @Jeong_et_al_2007] requires the creation of two core documents: 
 
 ::: incremental
 - A detailed Bayesian analysis plan (BAP)
@@ -493,58 +1001,39 @@ Together, they should allow the regulatory authority to assess:
 
 ---
 
-## 8. Results: data {style="font-size:64%;"}
+## 9. CDISC workflow and traceability {style="font-size:60%;"}
 
-build a demographic table with summarize_vars(), for age and disease
-
----
-
-## 8. Results: frequentist F&G model {style="font-size:64%;"}
-
-
----
-
-## 8. Results: Bayesian F&G model {style="font-size:64%;"}
-
----
-
-## 8. Results: Bayesian J&F model {style="font-size:64%;"}
-
-
----
-
-## 9. CDISC Standards and traceability {style="font-size:64%;"}
-
-This example used a pre-processed dataset. However, the standard clinical trial workflow would involve a rigorous data pipeline to ensure traceability and regulatory compliance. 
+While this example utilized pre-processed data, a regulatory-grade workflow requires a rigorous CDISC-compliant pipeline to ensure end-to-end traceability.
 
 ::: {.fragment}
-Some steps "missing" for the example workflow include:
+Key "missing" steps from this analysis include:
 
 ::: incremental
-- Mapping raw source data to formal SDTM domains,
-- Cleaning and validating SDTM inputs to ensure data integrity,
-- Deriving the ADaM ADSL dataset,
-- Deriving the ADaM ADTTE dataset,
-- Producing Tables, Listings, and Graphs/Figures (TLGs/TLFs) 
-- and more
+1. **SDTM Mapping:** Converting raw CRF and EDC data into standardized domains.
+2. **ADaM Derivation:** Building Analysis Data Models (ADSL, ADTTE).
+3. **ARS/ARD Derivation:** Capturing analysis results and metadata in a machine-readable format.
+4. **TLG/TLF Production:** Generating (additional) validated Tables, Listings, and Graphs/Figures from ARD.
+5. and more 
 :::
 :::
 
 ::: {.notes}
-* [Mapping raw source data to formal SDTM domains]{.underline}, for this purpose I would use the `sdtm.oak` package [@Ganapathy_et_al_2025]
+1. [SDTM Mapping:]{.underline}: Mapping raw data to domains like DM (Demographics), DS (Disposition), and CE (Clinical Events). For modern R-based mapping, the `sdtm.oak` package [@Ganapathy_et_al_2025] provides a framework for modular, reusable mapping scripts.
 
-* [Cleaning and validating SDTM inputs to ensure data integrity]{.underline}, like the **DS** (Disposition) and **RS** (Response) domains.
+2. [ADaM Derivation:]{.underline}: Using the `admiral` package [@Straub_et_al_2026] to handle complex censoring logic for competing risks, distinguishing between 'target events', 'competing events', and 'right-censoring'.
 
-* [Deriving the ADaM ADTTE dataset]{.underline}, for this purpose I would use the `admiral` package [@Straub_et_al_2026], distinguishing between 'censored', 'target event' and 'competing event'.
+3. [ARS/ARD Derivation:]{.underline} **Analysis Results Standard (ARS)** with its **Analysis Results Data (ARD)** is a standardized intermediate layer between ADaM and the final output, facilitating automation, reproducibility, and traceability. 
+
+4. [TLG/TLF Production:]{.underline}: Regulatory-grade displays produced using the `NEST` suite (`rtables`, `tern`, `teal`). By consuming standardized ARD, the process becomes "metadata-driven," ensuring the final output is programmatically linked to the underlying ADaM for auditability.
 :::
 
 ---
 
-## 10. Business value for Medpace {style="font-size:64%;"}
+## 10. Business value for Medpace {style="font-size:60%;"}
 
 Implementing advanced Bayesian models differentiates **Medpace** as a high-tier technical partner, ready to propose complex designs under the [FDA Complex Innovative Trial Design (CID) program](https://www.fda.gov/drugs/development-resources/complex-innovative-trial-design-meeting-program)
 
-Specifically, the Bayesian J&F model provides:
+Specifically, the Bayesian Jeong-Fine model provides:
 
 ::: incremental
 1. Direct interpretability for clinicians and regulatory bodies,
@@ -597,7 +1086,7 @@ To conclude I can say that,
 
 ---
 
-## References {style="font-size:80%;"}
+## References {style="font-size:60%;"}
 
 :::{#refs style="font-size:80%;"}
 

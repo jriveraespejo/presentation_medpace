@@ -25,5 +25,5 @@ format:
     csl: diabetologia.csl
     css: styles.css
     logo: figures/medpace_logo.png
-    footer: 'Biostatistics presentation | Jose Manuel Rivera Espejo'
+    footer: 'Competing Risks, a Bayesian parametric alternative | Jose Manuel Rivera Espejo | [Github Repository](https://github.com/jriveraespejo/presentation_medpace.git)'
     #embed-resources: true
