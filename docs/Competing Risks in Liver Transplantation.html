@@ -659,7 +659,7 @@ F_{ij}(t,\boldsymbol{\beta},\boldsymbol{\theta}) = \int_{0}^{t} f_{ij}(u,\boldsy
 <p>The following tools are available for model estimation:</p>
 <div>
 <ul>
-<li class="fragment"><strong>Fine-Gray:</strong> well-supported frequentist implementation via the <code>cmprsk</code> package <span class="citation" data-cites="Gray_2024">[<a href="#/references" role="doc-biblioref" onclick="">7</a>]</span>. The <code>survival</code> package <span class="citation" data-cites="Therneau_et_al_2000 Therneau_2026">[<a href="#/references" role="doc-biblioref" onclick="">8</a>, <a href="#/references" role="doc-biblioref" onclick="">9</a>]</span> also provides the <code>finegray</code> function.</li>
+<li class="fragment"><strong>Fine-Gray:</strong> Well-supported frequentist implementation via the <code>cmprsk</code> package <span class="citation" data-cites="Gray_2024">[<a href="#/references" role="doc-biblioref" onclick="">7</a>]</span> and <code>survival</code> package <span class="citation" data-cites="Therneau_et_al_2000 Therneau_2026">[<a href="#/references" role="doc-biblioref" onclick="">8</a>, <a href="#/references" role="doc-biblioref" onclick="">9</a>]</span> with the <code>finegray</code> function.</li>
 <li class="fragment"><strong>Jeong-Fine:</strong> Lacks a long-standing, stable frequentist implementation; however, the <code>cmpp</code> package <span class="citation" data-cites="Ezzatabadipour_2025">[<a href="#/references" role="doc-biblioref" onclick="">10</a>]</span> (currently in development phase) provides an option.</li>
 </ul>
 </div>
@@ -1081,15 +1081,15 @@ Cause of graft failure
 <p>About the fitting process:</p>
 <div>
 <ul>
-<li class="fragment">It used the <code>cmprsk</code> package <span class="citation" data-cites="Gray_2024">[<a href="#/references" role="doc-biblioref" onclick="">7</a>]</span> and the tidy-wrapper <code>tidycmprsk</code> <span class="citation" data-cites="Sjoberg_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">14</a>]</span>.</li>
-<li class="fragment">It runs all causes in a second</li>
+<li class="fragment">It used the <code>cmprsk</code> package <span class="citation" data-cites="Gray_2024">[<a href="#/references" role="doc-biblioref" onclick="">7</a>]</span>.</li>
+<li class="fragment">It runs all causes in a second.</li>
 </ul>
 </div>
 <div class="fragment">
 <div class="cell">
 <details class="code-fold">
 <summary>Fine-Gray regression (Equivalence: COXT01)</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r code-overflow-wrap number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="do">### Bayseian Fine-Gray regression ####</span></span>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r code-overflow-wrap number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="do">### Fine-Gray regression ####</span></span>
 <span id="cb9-2"><a></a><span class="co"># (Equivalence: COXT01) </span></span>
 <span id="cb9-3"><a></a></span>
 <span id="cb9-4"><a></a><span class="co"># load ADR?</span></span>
@@ -1097,57 +1097,54 @@ Cause of graft failure
 <span id="cb9-6"><a></a>  <span class="fu">file.path</span>( </span>
 <span id="cb9-7"><a></a>    <span class="fu">here</span>(),</span>
 <span id="cb9-8"><a></a>    <span class="st">'results'</span>,</span>
-<span id="cb9-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_B_FG.RDS'</span>) ) )</span>
+<span id="cb9-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_F_FG.RDS'</span>) ) )</span>
 <span id="cb9-10"><a></a></span>
-<span id="cb9-11"><a></a></span>
-<span id="cb9-12"><a></a>hr_cof <span class="sc">%&gt;%</span></span>
-<span id="cb9-13"><a></a>  <span class="fu">select</span>( </span>
-<span id="cb9-14"><a></a>    <span class="st">'Effect/Covariate Included in the model'</span>, </span>
-<span id="cb9-15"><a></a>    <span class="st">'Hazard ratio'</span>, </span>
-<span id="cb9-16"><a></a>    lower, </span>
-<span id="cb9-17"><a></a>    upper, </span>
-<span id="cb9-18"><a></a>    <span class="st">'P(0.95&lt; HR &lt;1.1)'</span>, </span>
-<span id="cb9-19"><a></a>    cof_label ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-22"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb9-23"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb9-24"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
-<span id="cb9-25"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
-<span id="cb9-26"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-27"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb9-28"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
-<span id="cb9-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
-<span id="cb9-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-31"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb9-32"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
-<span id="cb9-33"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
-<span id="cb9-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-35"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb9-36"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
-<span id="cb9-37"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
-<span id="cb9-38"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-39"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-11"><a></a><span class="co"># Hazard tables</span></span>
+<span id="cb9-12"><a></a>hr_cof[,<span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,<span class="dv">7</span>)] <span class="sc">%&gt;%</span></span>
+<span id="cb9-13"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-14"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-15"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-16"><a></a>  <span class="fu">cols_align</span>(</span>
+<span id="cb9-17"><a></a>    <span class="at">align =</span> <span class="st">"right"</span>,</span>
+<span id="cb9-18"><a></a>    <span class="at">columns =</span> <span class="fu">everything</span>()</span>
+<span id="cb9-19"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-20"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb9-21"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
+<span id="cb9-22"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
+<span id="cb9-23"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-24"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb9-25"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
+<span id="cb9-26"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'p-value'</span>)</span>
+<span id="cb9-27"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-28"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb9-29"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb9-30"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
+<span id="cb9-31"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-32"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb9-33"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
+<span id="cb9-34"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb9-35"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-36"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
-<div id="nvgtljcelu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#nvgtljcelu table {
+<div id="aehsxfyyjt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#aehsxfyyjt table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#nvgtljcelu thead, #nvgtljcelu tbody, #nvgtljcelu tfoot, #nvgtljcelu tr, #nvgtljcelu td, #nvgtljcelu th {
+#aehsxfyyjt thead, #aehsxfyyjt tbody, #aehsxfyyjt tfoot, #aehsxfyyjt tr, #aehsxfyyjt td, #aehsxfyyjt th {
   border-style: none;
 }
 
-#nvgtljcelu p {
+#aehsxfyyjt p {
   margin: 0;
   padding: 0;
 }
 
-#nvgtljcelu .gt_table {
+#aehsxfyyjt .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1173,12 +1170,12 @@ Cause of graft failure
   border-left-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_caption {
+#aehsxfyyjt .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#nvgtljcelu .gt_title {
+#aehsxfyyjt .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1190,7 +1187,7 @@ Cause of graft failure
   border-bottom-width: 0;
 }
 
-#nvgtljcelu .gt_subtitle {
+#aehsxfyyjt .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1202,7 +1199,7 @@ Cause of graft failure
   border-top-width: 0;
 }
 
-#nvgtljcelu .gt_heading {
+#aehsxfyyjt .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1214,13 +1211,13 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_bottom_border {
+#aehsxfyyjt .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_col_headings {
+#aehsxfyyjt .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1235,7 +1232,7 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_col_heading {
+#aehsxfyyjt .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1255,7 +1252,7 @@ Cause of graft failure
   overflow-x: hidden;
 }
 
-#nvgtljcelu .gt_column_spanner_outer {
+#aehsxfyyjt .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1267,15 +1264,15 @@ Cause of graft failure
   padding-right: 4px;
 }
 
-#nvgtljcelu .gt_column_spanner_outer:first-child {
+#aehsxfyyjt .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#nvgtljcelu .gt_column_spanner_outer:last-child {
+#aehsxfyyjt .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#nvgtljcelu .gt_column_spanner {
+#aehsxfyyjt .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1287,11 +1284,11 @@ Cause of graft failure
   width: 100%;
 }
 
-#nvgtljcelu .gt_spanner_row {
+#aehsxfyyjt .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#nvgtljcelu .gt_group_heading {
+#aehsxfyyjt .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1317,7 +1314,7 @@ Cause of graft failure
   text-align: left;
 }
 
-#nvgtljcelu .gt_empty_group_heading {
+#aehsxfyyjt .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1332,15 +1329,15 @@ Cause of graft failure
   vertical-align: middle;
 }
 
-#nvgtljcelu .gt_from_md > :first-child {
+#aehsxfyyjt .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#nvgtljcelu .gt_from_md > :last-child {
+#aehsxfyyjt .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#nvgtljcelu .gt_row {
+#aehsxfyyjt .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1359,7 +1356,7 @@ Cause of graft failure
   overflow-x: hidden;
 }
 
-#nvgtljcelu .gt_stub {
+#aehsxfyyjt .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1372,7 +1369,7 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#nvgtljcelu .gt_stub_row_group {
+#aehsxfyyjt .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1386,15 +1383,15 @@ Cause of graft failure
   vertical-align: top;
 }
 
-#nvgtljcelu .gt_row_group_first td {
+#aehsxfyyjt .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#nvgtljcelu .gt_row_group_first th {
+#aehsxfyyjt .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#nvgtljcelu .gt_summary_row {
+#aehsxfyyjt .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1404,16 +1401,16 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#nvgtljcelu .gt_first_summary_row {
+#aehsxfyyjt .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_first_summary_row.thick {
+#aehsxfyyjt .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#nvgtljcelu .gt_last_summary_row {
+#aehsxfyyjt .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1423,7 +1420,7 @@ Cause of graft failure
   border-bottom-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_grand_summary_row {
+#aehsxfyyjt .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1433,7 +1430,7 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#nvgtljcelu .gt_first_grand_summary_row {
+#aehsxfyyjt .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1443,7 +1440,7 @@ Cause of graft failure
   border-top-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_last_grand_summary_row_top {
+#aehsxfyyjt .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1453,11 +1450,11 @@ Cause of graft failure
   border-bottom-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_striped {
+#aehsxfyyjt .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#nvgtljcelu .gt_table_body {
+#aehsxfyyjt .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1466,7 +1463,7 @@ Cause of graft failure
   border-bottom-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_footnotes {
+#aehsxfyyjt .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1480,7 +1477,7 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_footnote {
+#aehsxfyyjt .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1489,7 +1486,7 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#nvgtljcelu .gt_sourcenotes {
+#aehsxfyyjt .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1503,7 +1500,7 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#nvgtljcelu .gt_sourcenote {
+#aehsxfyyjt .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1511,72 +1508,72 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#nvgtljcelu .gt_left {
+#aehsxfyyjt .gt_left {
   text-align: left;
 }
 
-#nvgtljcelu .gt_center {
+#aehsxfyyjt .gt_center {
   text-align: center;
 }
 
-#nvgtljcelu .gt_right {
+#aehsxfyyjt .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#nvgtljcelu .gt_font_normal {
+#aehsxfyyjt .gt_font_normal {
   font-weight: normal;
 }
 
-#nvgtljcelu .gt_font_bold {
+#aehsxfyyjt .gt_font_bold {
   font-weight: bold;
 }
 
-#nvgtljcelu .gt_font_italic {
+#aehsxfyyjt .gt_font_italic {
   font-style: italic;
 }
 
-#nvgtljcelu .gt_super {
+#aehsxfyyjt .gt_super {
   font-size: 65%;
 }
 
-#nvgtljcelu .gt_footnote_marks {
+#aehsxfyyjt .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#nvgtljcelu .gt_asterisk {
+#aehsxfyyjt .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#nvgtljcelu .gt_indent_1 {
+#aehsxfyyjt .gt_indent_1 {
   text-indent: 5px;
 }
 
-#nvgtljcelu .gt_indent_2 {
+#aehsxfyyjt .gt_indent_2 {
   text-indent: 10px;
 }
 
-#nvgtljcelu .gt_indent_3 {
+#aehsxfyyjt .gt_indent_3 {
   text-indent: 15px;
 }
 
-#nvgtljcelu .gt_indent_4 {
+#aehsxfyyjt .gt_indent_4 {
   text-indent: 20px;
 }
 
-#nvgtljcelu .gt_indent_5 {
+#aehsxfyyjt .gt_indent_5 {
   text-indent: 25px;
 }
 
-#nvgtljcelu .katex-display {
+#aehsxfyyjt .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#nvgtljcelu div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#aehsxfyyjt div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1597,12 +1594,12 @@ Treatment effect adjusted for covariate
 </div></th>
 </tr>
 <tr class="odd gt_col_headings gt_spanner_row">
-<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
+<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
 <th rowspan="2" id="Hazard-ratio" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hazard ratio</th>
 <th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
 90% CI
 </div></th>
-<th rowspan="2" id="P(0.95<-HR-<1.1)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(0.95&lt; HR &lt;1.1)</th>
+<th rowspan="2" id="p-value" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">p-value</th>
 </tr>
 <tr class="header gt_col_headings">
 <th id="lower" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">lower</th>
@@ -1614,32 +1611,35 @@ Treatment effect adjusted for covariate
 <td colspan="5" id="Organ Rejection" class="gt_group_heading" data-quarto-table-cell-role="th" scope="colgroup">Organ Rejection</td>
 </tr>
 <tr class="even gt_row_group_first">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
-<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.65</td>
-<td class="gt_row gt_right" headers="Organ Rejection  lower">0.29</td>
-<td class="gt_row gt_right" headers="Organ Rejection  upper">1.21</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0605</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.60</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.31</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.15</td>
+<td class="gt_row gt_right" headers="Organ Rejection  p-value">0.7877</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
-<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.96</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.97</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.93</td>
-<td class="gt_row gt_right" headers="Organ Rejection  upper">0.99</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.6055</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.00</td>
+<td class="gt_row gt_right" headers="Organ Rejection  p-value"><br>
+</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.69</td>
-<td class="gt_row gt_right" headers="Organ Rejection  lower">0.25</td>
-<td class="gt_row gt_right" headers="Organ Rejection  upper">1.38</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0663</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.29</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">1.62</td>
+<td class="gt_row gt_right" headers="Organ Rejection  p-value"><br>
+</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
-<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.17</td>
-<td class="gt_row gt_right" headers="Organ Rejection  lower">0.49</td>
-<td class="gt_row gt_right" headers="Organ Rejection  upper">2.16</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.1340</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.10</td>
+<td class="gt_row gt_right" headers="Organ Rejection  lower">0.51</td>
+<td class="gt_row gt_right" headers="Organ Rejection  upper">2.38</td>
+<td class="gt_row gt_right" headers="Organ Rejection  p-value"><br>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1720,7 +1720,7 @@ Treatment effect adjusted for covariate
 <div class="cell">
 <details class="code-fold">
 <summary>Bayesian Fine-Gray regression (Equivalence: COXT01)</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a><span class="do">### Fine-Gray regression ####</span></span>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a><span class="do">### Bayesian Fine-Gray regression ####</span></span>
 <span id="cb11-2"><a></a><span class="co"># (Equivalence: COXT01) </span></span>
 <span id="cb11-3"><a></a></span>
 <span id="cb11-4"><a></a><span class="co"># load ADR?</span></span>
@@ -1742,23 +1742,27 @@ Treatment effect adjusted for covariate
 <span id="cb11-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-22"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb11-23"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb11-24"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
-<span id="cb11-25"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
+<span id="cb11-23"><a></a>  <span class="fu">cols_align</span>(</span>
+<span id="cb11-24"><a></a>    <span class="at">align =</span> <span class="st">"right"</span>,</span>
+<span id="cb11-25"><a></a>    <span class="at">columns =</span> <span class="fu">everything</span>()</span>
 <span id="cb11-26"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-27"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb11-28"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
-<span id="cb11-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
+<span id="cb11-28"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
+<span id="cb11-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
 <span id="cb11-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb11-31"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb11-32"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
-<span id="cb11-33"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
+<span id="cb11-31"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb11-32"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
+<span id="cb11-33"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
 <span id="cb11-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-35"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb11-36"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
-<span id="cb11-37"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb11-36"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb11-37"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
 <span id="cb11-38"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb11-39"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-39"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb11-40"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
+<span id="cb11-41"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb11-42"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-43"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -2228,7 +2232,7 @@ Treatment effect adjusted for covariate
 </div></th>
 </tr>
 <tr class="odd gt_col_headings gt_spanner_row">
-<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
+<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
 <th rowspan="2" id="Hazard-ratio" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hazard ratio</th>
 <th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
 90% CI
@@ -2245,28 +2249,28 @@ Treatment effect adjusted for covariate
 <td colspan="5" id="Organ Rejection" class="gt_group_heading" data-quarto-table-cell-role="th" scope="colgroup">Organ Rejection</td>
 </tr>
 <tr class="even gt_row_group_first">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.65</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.29</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.21</td>
 <td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0605</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.96</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.93</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.99</td>
 <td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.6055</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.69</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.25</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.38</td>
 <td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0663</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.17</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.49</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">2.16</td>
@@ -2324,7 +2328,7 @@ Treatment effect adjusted for covariate
 <div class="cell">
 <details class="code-fold">
 <summary>Bayesian Jeong-Fine regression (Equivalence: COXT01)</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a><span class="do">### Jeong-Fine regression ####</span></span>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a><span class="do">### Bayesian Jeong-Fine regression ####</span></span>
 <span id="cb12-2"><a></a><span class="co"># (Equivalence: COXT01) </span></span>
 <span id="cb12-3"><a></a></span>
 <span id="cb12-4"><a></a><span class="co"># load ADR?</span></span>
@@ -2346,23 +2350,27 @@ Treatment effect adjusted for covariate
 <span id="cb12-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-22"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb12-23"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb12-24"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
-<span id="cb12-25"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
+<span id="cb12-23"><a></a>  <span class="fu">cols_align</span>(</span>
+<span id="cb12-24"><a></a>    <span class="at">align =</span> <span class="st">"right"</span>,</span>
+<span id="cb12-25"><a></a>    <span class="at">columns =</span> <span class="fu">everything</span>()</span>
 <span id="cb12-26"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-27"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb12-28"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
-<span id="cb12-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
+<span id="cb12-28"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
+<span id="cb12-29"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
 <span id="cb12-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb12-31"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb12-32"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
-<span id="cb12-33"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
+<span id="cb12-31"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb12-32"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
+<span id="cb12-33"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
 <span id="cb12-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-35"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb12-36"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
-<span id="cb12-37"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb12-36"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb12-37"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
 <span id="cb12-38"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb12-39"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-39"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb12-40"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
+<span id="cb12-41"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb12-42"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-43"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -2832,7 +2840,7 @@ Treatment effect adjusted for covariate
 </div></th>
 </tr>
 <tr class="odd gt_col_headings gt_spanner_row">
-<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
+<th rowspan="2" id="Effect/Covariate-Included-in-the-model" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Effect/Covariate Included in the model</th>
 <th rowspan="2" id="Hazard-ratio" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hazard ratio</th>
 <th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
 90% CI
@@ -2849,35 +2857,35 @@ Treatment effect adjusted for covariate
 <td colspan="5" id="Organ Rejection" class="gt_group_heading" data-quarto-table-cell-role="th" scope="colgroup">Organ Rejection</td>
 </tr>
 <tr class="even gt_row_group_first">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Solution A vs control (Solution B)</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.63</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.30</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.14</td>
 <td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0530</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.95</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.92</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.98</td>
 <td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.5232</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.72</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.28</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.43</td>
 <td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0777</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.02</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.43</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.91</td>
 <td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.1247</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Scale</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Scale</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.01</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.00</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.05</td>
@@ -2885,7 +2893,7 @@ Treatment effect adjusted for covariate
 </td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Organ Rejection  Effect/Covariate Included in the model">Shape</td>
+<td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Shape</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.50</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.38</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.63</td>
@@ -2941,7 +2949,7 @@ Treatment effect adjusted for covariate
 <img data-src="Competing-Risks-in-Liver-Transplantation_files/figure-revealjs/unnamed-chunk-9-1.png" width="960" class="r-stretch"></section>
 <section id="validation-and-regulatory-aligment" class="slide level2" style="font-size:60%;">
 <h2>8. Validation and regulatory aligment</h2>
-<p>Per the <strong>FDA Draft Guidance on Bayesian Methodology</strong> <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span>, utilizing the Jeong-Fine model <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> requires the creation of two core documents:</p>
+<p>Per the <strong>FDA Draft Guidance on Bayesian Methodology</strong> <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">14</a>]</span>, utilizing the Jeong-Fine model <span class="citation" data-cites="Jeong_et_al_2006 Jeong_et_al_2007">[<a href="#/references" role="doc-biblioref" onclick="">5</a>, <a href="#/references" role="doc-biblioref" onclick="">6</a>]</span> requires the creation of two core documents:</p>
 <div>
 <ul>
 <li class="fragment">A detailed Bayesian analysis plan (BAP)</li>
@@ -3025,8 +3033,8 @@ Treatment effect adjusted for covariate
 </div>
 <aside class="notes">
 <ol type="1">
-<li><p><u>SDTM Mapping:</u>: Mapping raw data to domains like DM (Demographics), DS (Disposition), and CE (Clinical Events). For modern R-based mapping, the <code>sdtm.oak</code> package <span class="citation" data-cites="Ganapathy_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">16</a>]</span> provides a framework for modular, reusable mapping scripts.</p></li>
-<li><p><u>ADaM Derivation:</u>: Using the <code>admiral</code> package <span class="citation" data-cites="Straub_et_al_2026">[<a href="#/references" role="doc-biblioref" onclick="">17</a>]</span> to handle complex censoring logic for competing risks, distinguishing between ‘target events’, ‘competing events’, and ‘right-censoring’.</p></li>
+<li><p><u>SDTM Mapping:</u>: Mapping raw data to domains like DM (Demographics), DS (Disposition), and CE (Clinical Events). For modern R-based mapping, the <code>sdtm.oak</code> package <span class="citation" data-cites="Ganapathy_et_al_2025">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span> provides a framework for modular, reusable mapping scripts.</p></li>
+<li><p><u>ADaM Derivation:</u>: Using the <code>admiral</code> package <span class="citation" data-cites="Straub_et_al_2026">[<a href="#/references" role="doc-biblioref" onclick="">16</a>]</span> to handle complex censoring logic for competing risks, distinguishing between ‘target events’, ‘competing events’, and ‘right-censoring’.</p></li>
 <li><p><u>ARS/ARD Derivation:</u> <strong>Analysis Results Standard (ARS)</strong> with its <strong>Analysis Results Data (ARD)</strong> is a standardized intermediate layer between ADaM and the final output, facilitating automation, reproducibility, and traceability.</p></li>
 <li><p><u>TLG/TLF Production:</u>: Regulatory-grade displays produced using the <code>NEST</code> suite (<code>rtables</code>, <code>tern</code>, <code>teal</code>). By consuming standardized ARD, the process becomes “metadata-driven,” ensuring the final output is programmatically linked to the underlying ADaM for auditability.</p></li>
 </ol>
@@ -3049,8 +3057,8 @@ Treatment effect adjusted for covariate
 <div>
 <ol type="1">
 <li class="fragment">Direct interpretability for clinicians and regulatory bodies,</li>
-<li class="fragment">Integrated handling of missing data <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span></li>
-<li class="fragment">Efficiency via information borrowing <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">15</a>]</span></li>
+<li class="fragment">Integrated handling of missing data <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">14</a>]</span></li>
+<li class="fragment">Efficiency via information borrowing <span class="citation" data-cites="FDA_Bayesian_2026">[<a href="#/references" role="doc-biblioref" onclick="">14</a>]</span></li>
 <li class="fragment">Stable extrapolation and prediction capabilities</li>
 <li class="fragment">Robustness in small-sample settings</li>
 </ol>
@@ -3146,17 +3154,14 @@ Treatment effect adjusted for covariate
 <div id="ref-Gabry_et_al_2025b" class="csl-entry" role="listitem">
 <div class="csl-left-margin">13. </div><div class="csl-right-inline">Gabry J, C̆es̆novar R, Johnson A, Bronder S (2025) <a href="https://mc-stan.org/cmdstanr/">Cmdstanr: R interface to ’CmdStan’</a></div>
 </div>
-<div id="ref-Sjoberg_et_al_2025" class="csl-entry" role="listitem">
-<div class="csl-left-margin">14. </div><div class="csl-right-inline">Sjoberg DD, Fei T (2025) <a href="https://mskcc-epi-bio.github.io/tidycmprsk/">Tidycmprsk: Competing risks estimation</a></div>
-</div>
 <div id="ref-FDA_Bayesian_2026" class="csl-entry" role="listitem">
-<div class="csl-left-margin">15. </div><div class="csl-right-inline">DHS, FDA, CDER, CBER (2026) <a href="https://www.fda.gov/media/190505/download">Use of bayesian methodology in clinical trials of drug and biological products, draft guidance for industry</a>. 1–29</div>
+<div class="csl-left-margin">14. </div><div class="csl-right-inline">DHS, FDA, CDER, CBER (2026) <a href="https://www.fda.gov/media/190505/download">Use of bayesian methodology in clinical trials of drug and biological products, draft guidance for industry</a>. 1–29</div>
 </div>
 <div id="ref-Ganapathy_et_al_2025" class="csl-entry" role="listitem">
-<div class="csl-left-margin">16. </div><div class="csl-right-inline">Ganapathy R, Forys A, Manukyan E, et al (2025) <a href="https://pharmaverse.github.io/sdtm.oak/">Sdtm.oak: SDTM data transformation engine</a></div>
+<div class="csl-left-margin">15. </div><div class="csl-right-inline">Ganapathy R, Forys A, Manukyan E, et al (2025) <a href="https://pharmaverse.github.io/sdtm.oak/">Sdtm.oak: SDTM data transformation engine</a></div>
 </div>
 <div id="ref-Straub_et_al_2026" class="csl-entry" role="listitem">
-<div class="csl-left-margin">17. </div><div class="csl-right-inline">Straub B, Bundfuss S, Bearham M, et al (2026) <a href="https://pharmaverse.github.io/admiral/">Admiral: ADaM in r asset library</a></div>
+<div class="csl-left-margin">16. </div><div class="csl-right-inline">Straub B, Bundfuss S, Bearham M, et al (2026) <a href="https://pharmaverse.github.io/admiral/">Admiral: ADaM in r asset library</a></div>
 </div>
 </div>
 

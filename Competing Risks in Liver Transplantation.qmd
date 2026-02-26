@@ -245,7 +245,7 @@ $h_{j}(t)$ is "the instantaneous event rate at time $t$ from cause $j$, given th
 The following tools are available for model estimation:
 
 ::: incremental
-- **Fine-Gray:** well-supported frequentist implementation via the `cmprsk` package [@Gray_2024]. The `survival` package [@Therneau_et_al_2000; @Therneau_2026] also provides the `finegray` function.
+- **Fine-Gray:** Well-supported frequentist implementation via the `cmprsk` package [@Gray_2024] and `survival` package [@Therneau_et_al_2000; @Therneau_2026] with the `finegray` function.
 - **Jeong-Fine:** Lacks a long-standing, stable frequentist implementation; however, the `cmpp` package [@Ezzatabadipour_2025] (currently in development phase) provides an option.
 :::
 
@@ -659,8 +659,8 @@ from [TLG Catalog](https://insightsengineering.github.io/tlg-catalog/stable/):
 About the fitting process:
 
 ::: incremental
-- It used the `cmprsk` package [@Gray_2024] and the tidy-wrapper `tidycmprsk` [@Sjoberg_et_al_2025].
-- It runs all causes in a second
+- It used the `cmprsk` package [@Gray_2024].
+- It runs all causes in a second.
 :::
 
 ::: {.fragment}
@@ -672,7 +672,7 @@ About the fitting process:
 #| code-fold: true
 #| code-summary: "Fine-Gray regression (Equivalence: COXT01)"
 
-### Bayseian Fine-Gray regression ####
+### Fine-Gray regression ####
 # (Equivalence: COXT01) 
 
 # load ADR?
@@ -680,27 +680,24 @@ hr_cof = readRDS(
   file.path( 
     here(),
     'results',
-    paste0('ARD_B_FG.RDS') ) )
+    paste0('ARD_F_FG.RDS') ) )
 
-
-hr_cof %>%
-  select( 
-    'Effect/Covariate Included in the model', 
-    'Hazard ratio', 
-    lower, 
-    upper, 
-    'P(0.95< HR <1.1)', 
-    cof_label ) %>%
+# Hazard tables
+hr_cof[,c(5,1:4,7)] %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
   ) %>%
   tab_spanner(
     label = "Treatment effect adjusted for covariate",
-    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+    columns = c('Hazard ratio','lower','upper','p-value')
   ) %>%
   fmt_number( 
     columns = 2:4,
@@ -711,6 +708,7 @@ hr_cof %>%
     decimal = 4
   ) %>%
   sub_missing( missing_text = " " )
+
 
 ```
 
@@ -786,7 +784,7 @@ About the fitting process:
 #| code-fold: true
 #| code-summary: "Bayesian Fine-Gray regression (Equivalence: COXT01)"
 
-### Fine-Gray regression ####
+### Bayesian Fine-Gray regression ####
 # (Equivalence: COXT01) 
 
 # load ADR?
@@ -808,6 +806,10 @@ hr_cof %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
@@ -864,7 +866,7 @@ from [TLG Catalog](https://insightsengineering.github.io/tlg-catalog/stable/):
 #| code-fold: true
 #| code-summary: "Bayesian Jeong-Fine regression (Equivalence: COXT01)"
 
-### Jeong-Fine regression ####
+### Bayesian Jeong-Fine regression ####
 # (Equivalence: COXT01) 
 
 # load ADR?
@@ -886,6 +888,10 @@ hr_cof %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')

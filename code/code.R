@@ -731,6 +731,10 @@ hr_cof[,c(5,1:4,7)] %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
@@ -755,6 +759,10 @@ hr_cof[,c(5,1:4,7)] %>%
   filter( cof_label != 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
@@ -834,6 +842,10 @@ hr_cof %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
@@ -864,6 +876,10 @@ hr_cof %>%
   filter( cof_label != 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
@@ -905,6 +921,10 @@ hr_cof %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
@@ -935,6 +955,10 @@ hr_cof %>%
   filter( cof_label != 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
   gt() %>%
+  cols_align(
+    align = "right",
+    columns = everything()
+  ) %>%
   tab_spanner(
     label = "90% CI",
     columns = c('lower','upper')
