@@ -969,6 +969,12 @@ legend( 'topleft', bty='n', lty=c(1,1,1),
                   '90% CI') )
 ```
 
+::: {.notes}
+Age = 55
+SolutionA = 1
+DiseasePBCvsALD = 0
+DiseasePSCvsALD = 1 
+:::
 ---
 
 ## 7. Results: Bayesian Jeong-Fine model {style="font-size:60%;"}
