@@ -1,6 +1,6 @@
 ---
 title: "Competing Risks in Liver Transplantation"
-subtitle: "A Bayesian parametric alternative, the Jeong-Fine model"
+subtitle: "A Bayesian parametric alternative to the Fine-Gray model"
 author: "Jose Manuel Rivera Espejo"
 date: last-modified
 date-format: "DD MMMM YYYY"
