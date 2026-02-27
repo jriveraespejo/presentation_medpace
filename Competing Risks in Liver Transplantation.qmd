@@ -130,7 +130,7 @@ Consistent with the **strategies for addressing intercurrent events** [@ICH_E9_R
 
     e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment.
 
-* **Apply the treatment policy strategy**. 
+* **Apply the treatment policy strategy**,
 
     e.g., follow patients and record failure from OR regardless of competing risks (the "re-transplant" problem).
 
@@ -691,6 +691,7 @@ hr_cof = readRDS(
     'results',
     paste0('ARD_F_FG.RDS') ) )
 
+
 # Hazard tables
 hr_cof[,c(5,1:4,7)] %>%
   filter( cof_label == 'Organ Rejection' ) %>%
@@ -717,7 +718,6 @@ hr_cof[,c(5,1:4,7)] %>%
     decimal = 4
   ) %>%
   sub_missing( missing_text = " " )
-
 
 ```
 
@@ -783,7 +783,7 @@ About the fitting process:
 
 ::: incremental
 - It used `Stan` [@Stan_2026a; @Stan_2026b] via the `cmdstanr` package [@Gabry_et_al_2025b].
-- It runs all causes in $250-300$ seconds ($4.2-5$ minutes),
+- It runs all causes in $250-300$ seconds (approx. $4-5$ minutes),
 - It produces healthy sampling chains
 :::
 
@@ -812,7 +812,7 @@ hr_cof %>%
     'Hazard ratio', 
     lower, 
     upper, 
-    'P(0.95< HR <1.1)', 
+    'P(HR < 0.95)', 
     cof_label ) %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
@@ -827,7 +827,7 @@ hr_cof %>%
   ) %>%
   tab_spanner(
     label = "Treatment effect adjusted for covariate",
-    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+    columns = c('Hazard ratio','lower','upper','P(HR < 0.95)')
   ) %>%
   fmt_number( 
     columns = 2:4,
@@ -856,7 +856,7 @@ About the fitting process:
 
 ::: incremental
 - It used `Stan` [@Stan_2026a; @Stan_2026b] via the `cmdstanr` package [@Gabry_et_al_2025b].
-- It runs all causes in $930-970$ seconds ($15.5-16.2$ minutes),
+- It runs all causes in $930-1500$ seconds (approx. $15-25$ minutes),
 - It produces healthy sampling chains,
 - ... but the order and reference level of some variables can lead to non-finite integrals
 :::
@@ -894,7 +894,7 @@ hr_cof %>%
     'Hazard ratio', 
     lower, 
     upper, 
-    'P(0.95< HR <1.1)', 
+    'P(HR < 0.95)', 
     cof_label ) %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
@@ -909,7 +909,7 @@ hr_cof %>%
   ) %>%
   tab_spanner(
     label = "Treatment effect adjusted for covariate",
-    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+    columns = c('Hazard ratio','lower','upper','P(HR < 0.95)')
   ) %>%
   fmt_number( 
     columns = 2:4,

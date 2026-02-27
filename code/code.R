@@ -281,12 +281,12 @@ HRsumm = HR %>%
   summarize_draws( ) 
 
 # hazard ratio "p-value" estimate summary
-thr = c(0.95, 1.1) # rope
-p_value = apply( HR>thr[1] & HR<thr[2], 2, as.integer) %>%
+thr = 0.95 # rope
+p_value = apply( HR<thr, 2, as.integer) %>%
   as_tibble() %>%
   summarize_draws( ) %>%
   select( variable, mean ) %>%
-  rename( 'P(0.95< HR <1.1)' = mean )
+  rename( 'P(HR < 0.95)' = mean )
 
 # join hazard ratio
 by = join_by( variable )
@@ -511,12 +511,12 @@ HRsumm = HR %>%
   summarize_draws( ) 
 
 # hazard ratio "p-value" estimate summary
-thr = c(0.95, 1.1) # rope
-p_value = apply( HR>thr[1] & HR<thr[2], 2, as.integer) %>%
+thr = 0.95 # rope
+p_value = apply( HR<thr, 2, as.integer) %>%
   as_tibble() %>%
   summarize_draws( ) %>%
   select( variable, mean ) %>%
-  rename( 'P(0.95< HR <1.1)' = mean )
+  rename( 'P(HR < 0.95)' = mean )
 
 # join hazard ratio
 by = join_by( variable )
@@ -837,7 +837,7 @@ hr_cof %>%
     'Hazard ratio', 
     lower, 
     upper, 
-    'P(0.95< HR <1.1)', 
+    'P(HR < 0.95)', 
     cof_label ) %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
@@ -852,7 +852,7 @@ hr_cof %>%
   ) %>%
   tab_spanner(
     label = "Treatment effect adjusted for covariate",
-    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+    columns = c('Hazard ratio','lower','upper','P(HR < 0.95)')
   ) %>%
   fmt_number( 
     columns = 2:4,
@@ -871,7 +871,7 @@ hr_cof %>%
     'Hazard ratio', 
     lower, 
     upper, 
-    'P(0.95< HR <1.1)', 
+    'P(HR < 0.95)', 
     cof_label ) %>%
   filter( cof_label != 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
@@ -886,7 +886,7 @@ hr_cof %>%
   ) %>%
   tab_spanner(
     label = "Treatment effect adjusted for covariate",
-    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+    columns = c('Hazard ratio','lower','upper','P(HR < 0.95)')
   ) %>%
   fmt_number( 
     columns = 2:4,
@@ -916,7 +916,7 @@ hr_cof %>%
     'Hazard ratio', 
     lower, 
     upper, 
-    'P(0.95< HR <1.1)', 
+    'P(HR < 0.95)', 
     cof_label ) %>%
   filter( cof_label == 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
@@ -931,7 +931,7 @@ hr_cof %>%
   ) %>%
   tab_spanner(
     label = "Treatment effect adjusted for covariate",
-    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+    columns = c('Hazard ratio','lower','upper','P(HR < 0.95)')
   ) %>%
   fmt_number( 
     columns = 2:4,
@@ -950,7 +950,7 @@ hr_cof %>%
     'Hazard ratio', 
     lower, 
     upper, 
-    'P(0.95< HR <1.1)', 
+    'P(HR < 0.95)', 
     cof_label ) %>%
   filter( cof_label != 'Organ Rejection' ) %>%
   group_by( cof_label ) %>%
@@ -965,7 +965,7 @@ hr_cof %>%
   ) %>%
   tab_spanner(
     label = "Treatment effect adjusted for covariate",
-    columns = c('Hazard ratio','lower','upper','P(0.95< HR <1.1)')
+    columns = c('Hazard ratio','lower','upper','P(HR < 0.95)')
   ) %>%
   fmt_number( 
     columns = 2:4,
@@ -1030,4 +1030,4 @@ for( j in 1:4 ){
                     'Double Exponential Quadrature', 
                     'Monte Carlo approx') )
 }
-par(mfrow=c(1,1))
+# par(mfrow=c(1,1))

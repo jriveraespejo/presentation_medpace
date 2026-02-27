@@ -11,7 +11,7 @@
   <meta name="generator" content="quarto-1.4.550">
 
   <meta name="author" content="Jose Manuel Rivera Espejo">
-  <meta name="dcterms.date" content="2026-02-26">
+  <meta name="dcterms.date" content="2026-02-27">
   <title>Competing Risks in Liver Transplantation</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -430,7 +430,7 @@ Jose Manuel Rivera Espejo
 </div>
 </div>
 
-  <p class="date">26 February 2026</p>
+  <p class="date">27 February 2026</p>
 </section>
 <section id="the-contents" class="slide level2" style="font-size:60%;">
 <h2>The contents</h2>
@@ -547,7 +547,7 @@ Jose Manuel Rivera Espejo
 <p>e.g., any cause of graft failure is considered an event.</p></li>
 <li class="fragment"><p><strong>Restricting inference to the principal stratum</strong>,</p>
 <p>e.g., evaluate the effect only in patients who would not experience early HAT (e.g., within the first 48 hours) regardless of the assigned treatment.</p></li>
-<li class="fragment"><p><strong>Apply the treatment policy strategy</strong>.</p>
+<li class="fragment"><p><strong>Apply the treatment policy strategy</strong>,</p>
 <p>e.g., follow patients and record failure from OR regardless of competing risks (the “re-transplant” problem).</p></li>
 <li class="fragment"><p><strong>Follow a while-alive strategy</strong>,</p>
 <p>e.g., assess failure from OR while the patient has not yet experienced a competing risk.</p></li>
@@ -1113,52 +1113,53 @@ Cause of graft failure
 <span id="cb9-8"><a></a>    <span class="st">'results'</span>,</span>
 <span id="cb9-9"><a></a>    <span class="fu">paste0</span>(<span class="st">'ARD_F_FG.RDS'</span>) ) )</span>
 <span id="cb9-10"><a></a></span>
-<span id="cb9-11"><a></a><span class="co"># Hazard tables</span></span>
-<span id="cb9-12"><a></a>hr_cof[,<span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,<span class="dv">7</span>)] <span class="sc">%&gt;%</span></span>
-<span id="cb9-13"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-14"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-15"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb9-16"><a></a>  <span class="fu">cols_align</span>(</span>
-<span id="cb9-17"><a></a>    <span class="at">align =</span> <span class="st">"right"</span>,</span>
-<span id="cb9-18"><a></a>    <span class="at">columns =</span> <span class="fu">everything</span>()</span>
-<span id="cb9-19"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-20"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb9-21"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
-<span id="cb9-22"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
-<span id="cb9-23"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-24"><a></a>  <span class="fu">tab_spanner</span>(</span>
-<span id="cb9-25"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
-<span id="cb9-26"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'p-value'</span>)</span>
-<span id="cb9-27"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-28"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb9-29"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
-<span id="cb9-30"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
-<span id="cb9-31"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-32"><a></a>  <span class="fu">fmt_number</span>( </span>
-<span id="cb9-33"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
-<span id="cb9-34"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
-<span id="cb9-35"><a></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb9-36"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-11"><a></a></span>
+<span id="cb9-12"><a></a><span class="co"># Hazard tables</span></span>
+<span id="cb9-13"><a></a>hr_cof[,<span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,<span class="dv">7</span>)] <span class="sc">%&gt;%</span></span>
+<span id="cb9-14"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-15"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-16"><a></a>  <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-17"><a></a>  <span class="fu">cols_align</span>(</span>
+<span id="cb9-18"><a></a>    <span class="at">align =</span> <span class="st">"right"</span>,</span>
+<span id="cb9-19"><a></a>    <span class="at">columns =</span> <span class="fu">everything</span>()</span>
+<span id="cb9-20"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-21"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb9-22"><a></a>    <span class="at">label =</span> <span class="st">"90% CI"</span>,</span>
+<span id="cb9-23"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'lower'</span>,<span class="st">'upper'</span>)</span>
+<span id="cb9-24"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-25"><a></a>  <span class="fu">tab_spanner</span>(</span>
+<span id="cb9-26"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
+<span id="cb9-27"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'p-value'</span>)</span>
+<span id="cb9-28"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-29"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb9-30"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb9-31"><a></a>    <span class="at">decimal =</span> <span class="dv">2</span></span>
+<span id="cb9-32"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-33"><a></a>  <span class="fu">fmt_number</span>( </span>
+<span id="cb9-34"><a></a>    <span class="at">columns =</span> <span class="dv">5</span>,</span>
+<span id="cb9-35"><a></a>    <span class="at">decimal =</span> <span class="dv">4</span></span>
+<span id="cb9-36"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-37"><a></a>  <span class="fu">sub_missing</span>( <span class="at">missing_text =</span> <span class="st">" "</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
-<div id="aehsxfyyjt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#aehsxfyyjt table {
+<div id="jwbkxkebxq" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#jwbkxkebxq table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#aehsxfyyjt thead, #aehsxfyyjt tbody, #aehsxfyyjt tfoot, #aehsxfyyjt tr, #aehsxfyyjt td, #aehsxfyyjt th {
+#jwbkxkebxq thead, #jwbkxkebxq tbody, #jwbkxkebxq tfoot, #jwbkxkebxq tr, #jwbkxkebxq td, #jwbkxkebxq th {
   border-style: none;
 }
 
-#aehsxfyyjt p {
+#jwbkxkebxq p {
   margin: 0;
   padding: 0;
 }
 
-#aehsxfyyjt .gt_table {
+#jwbkxkebxq .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1184,12 +1185,12 @@ Cause of graft failure
   border-left-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_caption {
+#jwbkxkebxq .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#aehsxfyyjt .gt_title {
+#jwbkxkebxq .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1201,7 +1202,7 @@ Cause of graft failure
   border-bottom-width: 0;
 }
 
-#aehsxfyyjt .gt_subtitle {
+#jwbkxkebxq .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1213,7 +1214,7 @@ Cause of graft failure
   border-top-width: 0;
 }
 
-#aehsxfyyjt .gt_heading {
+#jwbkxkebxq .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1225,13 +1226,13 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_bottom_border {
+#jwbkxkebxq .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_col_headings {
+#jwbkxkebxq .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1246,7 +1247,7 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_col_heading {
+#jwbkxkebxq .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1266,7 +1267,7 @@ Cause of graft failure
   overflow-x: hidden;
 }
 
-#aehsxfyyjt .gt_column_spanner_outer {
+#jwbkxkebxq .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1278,15 +1279,15 @@ Cause of graft failure
   padding-right: 4px;
 }
 
-#aehsxfyyjt .gt_column_spanner_outer:first-child {
+#jwbkxkebxq .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#aehsxfyyjt .gt_column_spanner_outer:last-child {
+#jwbkxkebxq .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#aehsxfyyjt .gt_column_spanner {
+#jwbkxkebxq .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1298,11 +1299,11 @@ Cause of graft failure
   width: 100%;
 }
 
-#aehsxfyyjt .gt_spanner_row {
+#jwbkxkebxq .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#aehsxfyyjt .gt_group_heading {
+#jwbkxkebxq .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1328,7 +1329,7 @@ Cause of graft failure
   text-align: left;
 }
 
-#aehsxfyyjt .gt_empty_group_heading {
+#jwbkxkebxq .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1343,15 +1344,15 @@ Cause of graft failure
   vertical-align: middle;
 }
 
-#aehsxfyyjt .gt_from_md > :first-child {
+#jwbkxkebxq .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#aehsxfyyjt .gt_from_md > :last-child {
+#jwbkxkebxq .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#aehsxfyyjt .gt_row {
+#jwbkxkebxq .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1370,7 +1371,7 @@ Cause of graft failure
   overflow-x: hidden;
 }
 
-#aehsxfyyjt .gt_stub {
+#jwbkxkebxq .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1383,7 +1384,7 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#aehsxfyyjt .gt_stub_row_group {
+#jwbkxkebxq .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1397,15 +1398,15 @@ Cause of graft failure
   vertical-align: top;
 }
 
-#aehsxfyyjt .gt_row_group_first td {
+#jwbkxkebxq .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#aehsxfyyjt .gt_row_group_first th {
+#jwbkxkebxq .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#aehsxfyyjt .gt_summary_row {
+#jwbkxkebxq .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1415,16 +1416,16 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#aehsxfyyjt .gt_first_summary_row {
+#jwbkxkebxq .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_first_summary_row.thick {
+#jwbkxkebxq .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#aehsxfyyjt .gt_last_summary_row {
+#jwbkxkebxq .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1434,7 +1435,7 @@ Cause of graft failure
   border-bottom-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_grand_summary_row {
+#jwbkxkebxq .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1444,7 +1445,7 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#aehsxfyyjt .gt_first_grand_summary_row {
+#jwbkxkebxq .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1454,7 +1455,7 @@ Cause of graft failure
   border-top-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_last_grand_summary_row_top {
+#jwbkxkebxq .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1464,11 +1465,11 @@ Cause of graft failure
   border-bottom-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_striped {
+#jwbkxkebxq .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#aehsxfyyjt .gt_table_body {
+#jwbkxkebxq .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1477,7 +1478,7 @@ Cause of graft failure
   border-bottom-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_footnotes {
+#jwbkxkebxq .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1491,7 +1492,7 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_footnote {
+#jwbkxkebxq .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1500,7 +1501,7 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#aehsxfyyjt .gt_sourcenotes {
+#jwbkxkebxq .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1514,7 +1515,7 @@ Cause of graft failure
   border-right-color: #D3D3D3;
 }
 
-#aehsxfyyjt .gt_sourcenote {
+#jwbkxkebxq .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1522,72 +1523,72 @@ Cause of graft failure
   padding-right: 5px;
 }
 
-#aehsxfyyjt .gt_left {
+#jwbkxkebxq .gt_left {
   text-align: left;
 }
 
-#aehsxfyyjt .gt_center {
+#jwbkxkebxq .gt_center {
   text-align: center;
 }
 
-#aehsxfyyjt .gt_right {
+#jwbkxkebxq .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#aehsxfyyjt .gt_font_normal {
+#jwbkxkebxq .gt_font_normal {
   font-weight: normal;
 }
 
-#aehsxfyyjt .gt_font_bold {
+#jwbkxkebxq .gt_font_bold {
   font-weight: bold;
 }
 
-#aehsxfyyjt .gt_font_italic {
+#jwbkxkebxq .gt_font_italic {
   font-style: italic;
 }
 
-#aehsxfyyjt .gt_super {
+#jwbkxkebxq .gt_super {
   font-size: 65%;
 }
 
-#aehsxfyyjt .gt_footnote_marks {
+#jwbkxkebxq .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#aehsxfyyjt .gt_asterisk {
+#jwbkxkebxq .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#aehsxfyyjt .gt_indent_1 {
+#jwbkxkebxq .gt_indent_1 {
   text-indent: 5px;
 }
 
-#aehsxfyyjt .gt_indent_2 {
+#jwbkxkebxq .gt_indent_2 {
   text-indent: 10px;
 }
 
-#aehsxfyyjt .gt_indent_3 {
+#jwbkxkebxq .gt_indent_3 {
   text-indent: 15px;
 }
 
-#aehsxfyyjt .gt_indent_4 {
+#jwbkxkebxq .gt_indent_4 {
   text-indent: 20px;
 }
 
-#aehsxfyyjt .gt_indent_5 {
+#jwbkxkebxq .gt_indent_5 {
   text-indent: 25px;
 }
 
-#aehsxfyyjt .katex-display {
+#jwbkxkebxq .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#aehsxfyyjt div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#jwbkxkebxq div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1727,7 +1728,7 @@ Treatment effect adjusted for covariate
 <div>
 <ul>
 <li class="fragment">It used <code>Stan</code> <span class="citation" data-cites="Stan_2026a Stan_2026b">[<a href="#/references" role="doc-biblioref" onclick="">11</a>, <a href="#/references" role="doc-biblioref" onclick="">12</a>]</span> via the <code>cmdstanr</code> package <span class="citation" data-cites="Gabry_et_al_2025b">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span>.</li>
-<li class="fragment">It runs all causes in <span class="math inline">\(250-300\)</span> seconds (<span class="math inline">\(4.2-5\)</span> minutes),</li>
+<li class="fragment">It runs all causes in <span class="math inline">\(250-300\)</span> seconds (approx. <span class="math inline">\(4-5\)</span> minutes),</li>
 <li class="fragment">It produces healthy sampling chains</li>
 </ul>
 </div>
@@ -1752,7 +1753,7 @@ Treatment effect adjusted for covariate
 <span id="cb11-15"><a></a>    <span class="st">'Hazard ratio'</span>, </span>
 <span id="cb11-16"><a></a>    lower, </span>
 <span id="cb11-17"><a></a>    upper, </span>
-<span id="cb11-18"><a></a>    <span class="st">'P(0.95&lt; HR &lt;1.1)'</span>, </span>
+<span id="cb11-18"><a></a>    <span class="st">'P(HR &lt; 0.95)'</span>, </span>
 <span id="cb11-19"><a></a>    cof_label ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
@@ -1767,7 +1768,7 @@ Treatment effect adjusted for covariate
 <span id="cb11-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-31"><a></a>  <span class="fu">tab_spanner</span>(</span>
 <span id="cb11-32"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
-<span id="cb11-33"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
+<span id="cb11-33"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(HR &lt; 0.95)'</span>)</span>
 <span id="cb11-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb11-35"><a></a>  <span class="fu">fmt_number</span>( </span>
 <span id="cb11-36"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
@@ -1781,23 +1782,23 @@ Treatment effect adjusted for covariate
 </details>
 <div class="cell-output-display">
 <div>
-<div id="hoakrvkton" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#hoakrvkton table {
+<div id="dkvzfvucum" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#dkvzfvucum table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#hoakrvkton thead, #hoakrvkton tbody, #hoakrvkton tfoot, #hoakrvkton tr, #hoakrvkton td, #hoakrvkton th {
+#dkvzfvucum thead, #dkvzfvucum tbody, #dkvzfvucum tfoot, #dkvzfvucum tr, #dkvzfvucum td, #dkvzfvucum th {
   border-style: none;
 }
 
-#hoakrvkton p {
+#dkvzfvucum p {
   margin: 0;
   padding: 0;
 }
 
-#hoakrvkton .gt_table {
+#dkvzfvucum .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1823,12 +1824,12 @@ Treatment effect adjusted for covariate
   border-left-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_caption {
+#dkvzfvucum .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#hoakrvkton .gt_title {
+#dkvzfvucum .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1840,7 +1841,7 @@ Treatment effect adjusted for covariate
   border-bottom-width: 0;
 }
 
-#hoakrvkton .gt_subtitle {
+#dkvzfvucum .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1852,7 +1853,7 @@ Treatment effect adjusted for covariate
   border-top-width: 0;
 }
 
-#hoakrvkton .gt_heading {
+#dkvzfvucum .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1864,13 +1865,13 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_bottom_border {
+#dkvzfvucum .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_col_headings {
+#dkvzfvucum .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1885,7 +1886,7 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_col_heading {
+#dkvzfvucum .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1905,7 +1906,7 @@ Treatment effect adjusted for covariate
   overflow-x: hidden;
 }
 
-#hoakrvkton .gt_column_spanner_outer {
+#dkvzfvucum .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1917,15 +1918,15 @@ Treatment effect adjusted for covariate
   padding-right: 4px;
 }
 
-#hoakrvkton .gt_column_spanner_outer:first-child {
+#dkvzfvucum .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#hoakrvkton .gt_column_spanner_outer:last-child {
+#dkvzfvucum .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#hoakrvkton .gt_column_spanner {
+#dkvzfvucum .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1937,11 +1938,11 @@ Treatment effect adjusted for covariate
   width: 100%;
 }
 
-#hoakrvkton .gt_spanner_row {
+#dkvzfvucum .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#hoakrvkton .gt_group_heading {
+#dkvzfvucum .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1967,7 +1968,7 @@ Treatment effect adjusted for covariate
   text-align: left;
 }
 
-#hoakrvkton .gt_empty_group_heading {
+#dkvzfvucum .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1982,15 +1983,15 @@ Treatment effect adjusted for covariate
   vertical-align: middle;
 }
 
-#hoakrvkton .gt_from_md > :first-child {
+#dkvzfvucum .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#hoakrvkton .gt_from_md > :last-child {
+#dkvzfvucum .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#hoakrvkton .gt_row {
+#dkvzfvucum .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2009,7 +2010,7 @@ Treatment effect adjusted for covariate
   overflow-x: hidden;
 }
 
-#hoakrvkton .gt_stub {
+#dkvzfvucum .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2022,7 +2023,7 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#hoakrvkton .gt_stub_row_group {
+#dkvzfvucum .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2036,15 +2037,15 @@ Treatment effect adjusted for covariate
   vertical-align: top;
 }
 
-#hoakrvkton .gt_row_group_first td {
+#dkvzfvucum .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#hoakrvkton .gt_row_group_first th {
+#dkvzfvucum .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#hoakrvkton .gt_summary_row {
+#dkvzfvucum .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2054,16 +2055,16 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#hoakrvkton .gt_first_summary_row {
+#dkvzfvucum .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_first_summary_row.thick {
+#dkvzfvucum .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#hoakrvkton .gt_last_summary_row {
+#dkvzfvucum .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2073,7 +2074,7 @@ Treatment effect adjusted for covariate
   border-bottom-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_grand_summary_row {
+#dkvzfvucum .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2083,7 +2084,7 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#hoakrvkton .gt_first_grand_summary_row {
+#dkvzfvucum .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2093,7 +2094,7 @@ Treatment effect adjusted for covariate
   border-top-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_last_grand_summary_row_top {
+#dkvzfvucum .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2103,11 +2104,11 @@ Treatment effect adjusted for covariate
   border-bottom-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_striped {
+#dkvzfvucum .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#hoakrvkton .gt_table_body {
+#dkvzfvucum .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2116,7 +2117,7 @@ Treatment effect adjusted for covariate
   border-bottom-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_footnotes {
+#dkvzfvucum .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2130,7 +2131,7 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_footnote {
+#dkvzfvucum .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -2139,7 +2140,7 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#hoakrvkton .gt_sourcenotes {
+#dkvzfvucum .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2153,7 +2154,7 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#hoakrvkton .gt_sourcenote {
+#dkvzfvucum .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2161,72 +2162,72 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#hoakrvkton .gt_left {
+#dkvzfvucum .gt_left {
   text-align: left;
 }
 
-#hoakrvkton .gt_center {
+#dkvzfvucum .gt_center {
   text-align: center;
 }
 
-#hoakrvkton .gt_right {
+#dkvzfvucum .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#hoakrvkton .gt_font_normal {
+#dkvzfvucum .gt_font_normal {
   font-weight: normal;
 }
 
-#hoakrvkton .gt_font_bold {
+#dkvzfvucum .gt_font_bold {
   font-weight: bold;
 }
 
-#hoakrvkton .gt_font_italic {
+#dkvzfvucum .gt_font_italic {
   font-style: italic;
 }
 
-#hoakrvkton .gt_super {
+#dkvzfvucum .gt_super {
   font-size: 65%;
 }
 
-#hoakrvkton .gt_footnote_marks {
+#dkvzfvucum .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#hoakrvkton .gt_asterisk {
+#dkvzfvucum .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#hoakrvkton .gt_indent_1 {
+#dkvzfvucum .gt_indent_1 {
   text-indent: 5px;
 }
 
-#hoakrvkton .gt_indent_2 {
+#dkvzfvucum .gt_indent_2 {
   text-indent: 10px;
 }
 
-#hoakrvkton .gt_indent_3 {
+#dkvzfvucum .gt_indent_3 {
   text-indent: 15px;
 }
 
-#hoakrvkton .gt_indent_4 {
+#dkvzfvucum .gt_indent_4 {
   text-indent: 20px;
 }
 
-#hoakrvkton .gt_indent_5 {
+#dkvzfvucum .gt_indent_5 {
   text-indent: 25px;
 }
 
-#hoakrvkton .katex-display {
+#dkvzfvucum .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#hoakrvkton div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#dkvzfvucum div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -2252,7 +2253,7 @@ Treatment effect adjusted for covariate
 <th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
 90% CI
 </div></th>
-<th rowspan="2" id="P(0.95<-HR-<1.1)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(0.95&lt; HR &lt;1.1)</th>
+<th rowspan="2" id="P(HR-<-0.95)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(HR &lt; 0.95)</th>
 </tr>
 <tr class="header gt_col_headings">
 <th id="lower" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">lower</th>
@@ -2268,28 +2269,28 @@ Treatment effect adjusted for covariate
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.65</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.29</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.21</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0605</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.8640</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.96</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.93</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.99</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.6055</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.3945</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.69</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.25</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.38</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0663</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.8153</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.17</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.49</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">2.16</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.1340</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.3855</td>
 </tr>
 </tbody>
 </table>
@@ -2319,7 +2320,7 @@ Treatment effect adjusted for covariate
 <div>
 <ul>
 <li class="fragment">It used <code>Stan</code> <span class="citation" data-cites="Stan_2026a Stan_2026b">[<a href="#/references" role="doc-biblioref" onclick="">11</a>, <a href="#/references" role="doc-biblioref" onclick="">12</a>]</span> via the <code>cmdstanr</code> package <span class="citation" data-cites="Gabry_et_al_2025b">[<a href="#/references" role="doc-biblioref" onclick="">13</a>]</span>.</li>
-<li class="fragment">It runs all causes in <span class="math inline">\(930-970\)</span> seconds (<span class="math inline">\(15.5-16.2\)</span> minutes),</li>
+<li class="fragment">It runs all causes in <span class="math inline">\(930-1500\)</span> seconds (approx. <span class="math inline">\(15-25\)</span> minutes),</li>
 <li class="fragment">It produces healthy sampling chains,</li>
 <li class="fragment">… but the order and reference level of some variables can lead to non-finite integrals</li>
 </ul>
@@ -2360,7 +2361,7 @@ Treatment effect adjusted for covariate
 <span id="cb12-15"><a></a>    <span class="st">'Hazard ratio'</span>, </span>
 <span id="cb12-16"><a></a>    lower, </span>
 <span id="cb12-17"><a></a>    upper, </span>
-<span id="cb12-18"><a></a>    <span class="st">'P(0.95&lt; HR &lt;1.1)'</span>, </span>
+<span id="cb12-18"><a></a>    <span class="st">'P(HR &lt; 0.95)'</span>, </span>
 <span id="cb12-19"><a></a>    cof_label ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-20"><a></a>  <span class="fu">filter</span>( cof_label <span class="sc">==</span> <span class="st">'Organ Rejection'</span> ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-21"><a></a>  <span class="fu">group_by</span>( cof_label ) <span class="sc">%&gt;%</span></span>
@@ -2375,7 +2376,7 @@ Treatment effect adjusted for covariate
 <span id="cb12-30"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-31"><a></a>  <span class="fu">tab_spanner</span>(</span>
 <span id="cb12-32"><a></a>    <span class="at">label =</span> <span class="st">"Treatment effect adjusted for covariate"</span>,</span>
-<span id="cb12-33"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(0.95&lt; HR &lt;1.1)'</span>)</span>
+<span id="cb12-33"><a></a>    <span class="at">columns =</span> <span class="fu">c</span>(<span class="st">'Hazard ratio'</span>,<span class="st">'lower'</span>,<span class="st">'upper'</span>,<span class="st">'P(HR &lt; 0.95)'</span>)</span>
 <span id="cb12-34"><a></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb12-35"><a></a>  <span class="fu">fmt_number</span>( </span>
 <span id="cb12-36"><a></a>    <span class="at">columns =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>,</span>
@@ -2389,23 +2390,23 @@ Treatment effect adjusted for covariate
 </details>
 <div class="cell-output-display">
 <div>
-<div id="ixaocoltdm" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#ixaocoltdm table {
+<div id="sfheiqnquv" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#sfheiqnquv table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#ixaocoltdm thead, #ixaocoltdm tbody, #ixaocoltdm tfoot, #ixaocoltdm tr, #ixaocoltdm td, #ixaocoltdm th {
+#sfheiqnquv thead, #sfheiqnquv tbody, #sfheiqnquv tfoot, #sfheiqnquv tr, #sfheiqnquv td, #sfheiqnquv th {
   border-style: none;
 }
 
-#ixaocoltdm p {
+#sfheiqnquv p {
   margin: 0;
   padding: 0;
 }
 
-#ixaocoltdm .gt_table {
+#sfheiqnquv .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -2431,12 +2432,12 @@ Treatment effect adjusted for covariate
   border-left-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_caption {
+#sfheiqnquv .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#ixaocoltdm .gt_title {
+#sfheiqnquv .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2448,7 +2449,7 @@ Treatment effect adjusted for covariate
   border-bottom-width: 0;
 }
 
-#ixaocoltdm .gt_subtitle {
+#sfheiqnquv .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2460,7 +2461,7 @@ Treatment effect adjusted for covariate
   border-top-width: 0;
 }
 
-#ixaocoltdm .gt_heading {
+#sfheiqnquv .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2472,13 +2473,13 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_bottom_border {
+#sfheiqnquv .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_col_headings {
+#sfheiqnquv .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2493,7 +2494,7 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_col_heading {
+#sfheiqnquv .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2513,7 +2514,7 @@ Treatment effect adjusted for covariate
   overflow-x: hidden;
 }
 
-#ixaocoltdm .gt_column_spanner_outer {
+#sfheiqnquv .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2525,15 +2526,15 @@ Treatment effect adjusted for covariate
   padding-right: 4px;
 }
 
-#ixaocoltdm .gt_column_spanner_outer:first-child {
+#sfheiqnquv .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#ixaocoltdm .gt_column_spanner_outer:last-child {
+#sfheiqnquv .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#ixaocoltdm .gt_column_spanner {
+#sfheiqnquv .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2545,11 +2546,11 @@ Treatment effect adjusted for covariate
   width: 100%;
 }
 
-#ixaocoltdm .gt_spanner_row {
+#sfheiqnquv .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#ixaocoltdm .gt_group_heading {
+#sfheiqnquv .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2575,7 +2576,7 @@ Treatment effect adjusted for covariate
   text-align: left;
 }
 
-#ixaocoltdm .gt_empty_group_heading {
+#sfheiqnquv .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2590,15 +2591,15 @@ Treatment effect adjusted for covariate
   vertical-align: middle;
 }
 
-#ixaocoltdm .gt_from_md > :first-child {
+#sfheiqnquv .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#ixaocoltdm .gt_from_md > :last-child {
+#sfheiqnquv .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#ixaocoltdm .gt_row {
+#sfheiqnquv .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2617,7 +2618,7 @@ Treatment effect adjusted for covariate
   overflow-x: hidden;
 }
 
-#ixaocoltdm .gt_stub {
+#sfheiqnquv .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2630,7 +2631,7 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#ixaocoltdm .gt_stub_row_group {
+#sfheiqnquv .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2644,15 +2645,15 @@ Treatment effect adjusted for covariate
   vertical-align: top;
 }
 
-#ixaocoltdm .gt_row_group_first td {
+#sfheiqnquv .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#ixaocoltdm .gt_row_group_first th {
+#sfheiqnquv .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#ixaocoltdm .gt_summary_row {
+#sfheiqnquv .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2662,16 +2663,16 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#ixaocoltdm .gt_first_summary_row {
+#sfheiqnquv .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_first_summary_row.thick {
+#sfheiqnquv .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#ixaocoltdm .gt_last_summary_row {
+#sfheiqnquv .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2681,7 +2682,7 @@ Treatment effect adjusted for covariate
   border-bottom-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_grand_summary_row {
+#sfheiqnquv .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2691,7 +2692,7 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#ixaocoltdm .gt_first_grand_summary_row {
+#sfheiqnquv .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2701,7 +2702,7 @@ Treatment effect adjusted for covariate
   border-top-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_last_grand_summary_row_top {
+#sfheiqnquv .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2711,11 +2712,11 @@ Treatment effect adjusted for covariate
   border-bottom-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_striped {
+#sfheiqnquv .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#ixaocoltdm .gt_table_body {
+#sfheiqnquv .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2724,7 +2725,7 @@ Treatment effect adjusted for covariate
   border-bottom-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_footnotes {
+#sfheiqnquv .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2738,7 +2739,7 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_footnote {
+#sfheiqnquv .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -2747,7 +2748,7 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#ixaocoltdm .gt_sourcenotes {
+#sfheiqnquv .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2761,7 +2762,7 @@ Treatment effect adjusted for covariate
   border-right-color: #D3D3D3;
 }
 
-#ixaocoltdm .gt_sourcenote {
+#sfheiqnquv .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2769,72 +2770,72 @@ Treatment effect adjusted for covariate
   padding-right: 5px;
 }
 
-#ixaocoltdm .gt_left {
+#sfheiqnquv .gt_left {
   text-align: left;
 }
 
-#ixaocoltdm .gt_center {
+#sfheiqnquv .gt_center {
   text-align: center;
 }
 
-#ixaocoltdm .gt_right {
+#sfheiqnquv .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#ixaocoltdm .gt_font_normal {
+#sfheiqnquv .gt_font_normal {
   font-weight: normal;
 }
 
-#ixaocoltdm .gt_font_bold {
+#sfheiqnquv .gt_font_bold {
   font-weight: bold;
 }
 
-#ixaocoltdm .gt_font_italic {
+#sfheiqnquv .gt_font_italic {
   font-style: italic;
 }
 
-#ixaocoltdm .gt_super {
+#sfheiqnquv .gt_super {
   font-size: 65%;
 }
 
-#ixaocoltdm .gt_footnote_marks {
+#sfheiqnquv .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#ixaocoltdm .gt_asterisk {
+#sfheiqnquv .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#ixaocoltdm .gt_indent_1 {
+#sfheiqnquv .gt_indent_1 {
   text-indent: 5px;
 }
 
-#ixaocoltdm .gt_indent_2 {
+#sfheiqnquv .gt_indent_2 {
   text-indent: 10px;
 }
 
-#ixaocoltdm .gt_indent_3 {
+#sfheiqnquv .gt_indent_3 {
   text-indent: 15px;
 }
 
-#ixaocoltdm .gt_indent_4 {
+#sfheiqnquv .gt_indent_4 {
   text-indent: 20px;
 }
 
-#ixaocoltdm .gt_indent_5 {
+#sfheiqnquv .gt_indent_5 {
   text-indent: 25px;
 }
 
-#ixaocoltdm .katex-display {
+#sfheiqnquv .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#ixaocoltdm div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#sfheiqnquv div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -2860,7 +2861,7 @@ Treatment effect adjusted for covariate
 <th colspan="2" id="90% CI" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
 90% CI
 </div></th>
-<th rowspan="2" id="P(0.95<-HR-<1.1)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(0.95&lt; HR &lt;1.1)</th>
+<th rowspan="2" id="P(HR-<-0.95)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">P(HR &lt; 0.95)</th>
 </tr>
 <tr class="header gt_col_headings">
 <th id="lower" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">lower</th>
@@ -2876,35 +2877,35 @@ Treatment effect adjusted for covariate
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.63</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.30</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.14</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0530</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.8852</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Age</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.95</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.92</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.98</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.5232</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.4768</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PBC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.72</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.28</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.43</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.0777</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.7885</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Disease PSC vs ALD</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">1.02</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.43</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">1.91</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)">0.1247</td>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)">0.5242</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_right" headers="Organ Rejection  Effect/Covariate Included in the model">Scale</td>
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.01</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.00</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.05</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)"><br>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)"><br>
 </td>
 </tr>
 <tr class="odd">
@@ -2912,7 +2913,7 @@ Treatment effect adjusted for covariate
 <td class="gt_row gt_right" headers="Organ Rejection  Hazard ratio">0.50</td>
 <td class="gt_row gt_right" headers="Organ Rejection  lower">0.38</td>
 <td class="gt_row gt_right" headers="Organ Rejection  upper">0.63</td>
-<td class="gt_row gt_right" headers="Organ Rejection  P(0.95< HR <1.1)"><br>
+<td class="gt_row gt_right" headers="Organ Rejection  P(HR < 0.95)"><br>
 </td>
 </tr>
 </tbody>
